@@ -1,0 +1,136 @@
+import { Layout } from "@/components/Layout";
+import { 
+  Plus, 
+  Trash2, 
+  BookOpen, 
+  Calendar as CalendarIcon,
+  Search,
+  MoreVertical,
+  AlertCircle
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { useStudy } from "@/lib/study-context";
+import { AddSubjectDialog } from "@/components/AddSubjectDialog";
+import { AddProblemDialog } from "@/components/AddProblemDialog";
+
+export default function SubjectsPage() {
+  const { subjects, problems, deleteSubject } = useStudy();
+
+  const getSubjectColor = (score: number) => {
+    if (score >= 80) return "bg-emerald-100 border-emerald-200 text-emerald-900 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-100";
+    if (score >= 50) return "bg-amber-100 border-amber-200 text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-100";
+    return "bg-rose-100 border-rose-200 text-rose-900 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-100";
+  };
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-serif font-bold tracking-tight">Manage Subjects</h1>
+            <p className="text-muted-foreground">Track your exams and subject-specific problems.</p>
+          </div>
+          <AddSubjectDialog>
+            <Button className="shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> Add Subject
+            </Button>
+          </AddSubjectDialog>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {subjects.map((subject) => {
+             const subjectProblems = problems.filter(p => p.subjectId === subject.id && p.status === "active");
+             const problemCount = subjectProblems.length;
+             const colorClass = getSubjectColor(subject.studyScore);
+             
+             return (
+               <Card key={subject.id} className="overflow-hidden border-t-4 transition-all hover:shadow-md flex flex-col" style={{ borderTopColor: subject.studyScore >= 80 ? '#10b981' : subject.studyScore >= 50 ? '#f59e0b' : '#f43f5e' }}>
+                 <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                       <Badge variant="secondary" className="font-mono text-xs">
+                          Score: {subject.studyScore}
+                       </Badge>
+                       <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                                <MoreVertical className="h-4 w-4" />
+                             </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                             <AddProblemDialog subjectId={subject.id} subjectName={subject.name}>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  Report Problem
+                                </DropdownMenuItem>
+                             </AddProblemDialog>
+                             <DropdownMenuItem className="text-destructive" onClick={() => deleteSubject(subject.id)}>
+                                Delete Subject
+                             </DropdownMenuItem>
+                          </DropdownMenuContent>
+                       </DropdownMenu>
+                    </div>
+                    <CardTitle className="font-serif text-xl mt-2">{subject.name}</CardTitle>
+                 </CardHeader>
+                 <CardContent className="space-y-4 flex-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                       <CalendarIcon className="h-4 w-4" />
+                       <span>Exam: {subject.examDate}</span>
+                    </div>
+                    
+                    {problemCount > 0 ? (
+                       <div className="p-3 rounded-md bg-amber-50 border border-amber-100 text-amber-800 flex items-start gap-3">
+                          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                          <div className="text-sm">
+                             <span className="font-semibold block">{problemCount} Active Problems</span>
+                             <span className="text-xs opacity-90 truncate max-w-[180px]">
+                               {subjectProblems[0].description}
+                             </span>
+                          </div>
+                       </div>
+                    ) : (
+                       <div className="p-3 rounded-md bg-emerald-50 border border-emerald-100 text-emerald-800 flex items-start gap-3">
+                          <BookOpen className="h-4 w-4 mt-0.5 shrink-0" />
+                          <div className="text-sm">
+                             <span className="font-semibold block">All Clear</span>
+                             <span className="text-xs opacity-90">No active problems logged</span>
+                          </div>
+                       </div>
+                    )}
+                 </CardContent>
+                 <CardFooter className="bg-secondary/20 p-4">
+                    <AddProblemDialog subjectId={subject.id} subjectName={subject.name}>
+                        <Button variant="ghost" className="w-full hover:bg-background gap-2">
+                           <Plus className="h-3.5 w-3.5" /> Add Problem
+                        </Button>
+                    </AddProblemDialog>
+                 </CardFooter>
+               </Card>
+             );
+          })}
+          
+          <AddSubjectDialog>
+            <Button variant="outline" className="h-[280px] w-full flex flex-col gap-4 border-dashed border-2 hover:border-primary/50 hover:bg-primary/5 transition-all group">
+              <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                  <Plus className="h-8 w-8" />
+              </div>
+              <div className="text-center">
+                  <h3 className="font-medium text-lg">Add New Subject</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Track a new course or exam</p>
+              </div>
+            </Button>
+          </AddSubjectDialog>
+        </div>
+      </div>
+    </Layout>
+  );
+}
