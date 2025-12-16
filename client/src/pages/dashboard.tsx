@@ -18,11 +18,32 @@ import { differenceInDays, parseISO } from "date-fns";
 import heroImage from "@assets/generated_images/calm_study_environment_illustration.png";
 import { cn } from "@/lib/utils";
 import { LogStudyDialog } from "@/components/LogStudyDialog";
+import { Link } from "wouter";
 
 export default function Dashboard() {
-  const { subjects, problems, logs } = useStudy();
+  const { subjects, problems, logs, searchQuery, user } = useStudy();
   
-  const activeProblems = problems.filter(p => p.status === "active");
+  // Filter by search query
+  const filteredSubjects = subjects.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  // Sort subjects: Red (lowest score) first
+  const sortedSubjects = [...filteredSubjects].sort((a, b) => a.studyScore - b.studyScore);
+
+  // Filter problems by search query
+  const filteredProblems = problems.filter(p => 
+    p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subjects.find(s => s.id === p.subjectId)?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Sort problems: Problems from Red subjects first
+  const activeProblems = filteredProblems.filter(p => p.status === "active").sort((a, b) => {
+    const subjectA = subjects.find(s => s.id === a.subjectId);
+    const subjectB = subjects.find(s => s.id === b.subjectId);
+    return (subjectA?.studyScore || 0) - (subjectB?.studyScore || 0);
+  });
+
   const today = new Date();
 
   const getDaysLeft = (dateStr: string) => {
@@ -46,7 +67,7 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-8">
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card text-card-foreground paper-shadow">
+        <div className="relative overflow-hidden rounded-2xl border bg-card text-card-foreground paper-shadow transition-all hover:shadow-lg">
           <div className="absolute inset-0 z-0">
              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent z-10"></div>
              <img 
@@ -62,7 +83,7 @@ export default function Dashboard() {
                 Exam Season
               </Badge>
               <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground sm:text-4xl">
-                Keep up the momentum, Jane!
+                Keep up the momentum, {user ? user.name : "Student"}!
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 You have <span className="font-semibold text-foreground">{subjects.length} exams</span> coming up. Focus on the red subjects to improve your scores.
@@ -73,9 +94,11 @@ export default function Dashboard() {
                     Start Study Session
                   </Button>
                 </LogStudyDialog>
-                <Button variant="outline" className="bg-background/50 backdrop-blur-sm" data-testid="button-view-calendar">
-                  View Calendar
-                </Button>
+                <Link href="/calendar">
+                  <Button variant="outline" className="bg-background/50 backdrop-blur-sm hover:bg-background/80" data-testid="button-view-calendar">
+                    View Calendar
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -87,13 +110,15 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-serif font-semibold tracking-tight">Your Subjects</h2>
-              <Button variant="ghost" className="text-primary hover:text-primary/80 hover:bg-primary/5">
-                View All <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <Link href="/subjects">
+                <Button variant="ghost" className="text-primary hover:text-primary/80 hover:bg-primary/5">
+                  View All <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {subjects.map((subject) => {
+              {sortedSubjects.map((subject) => {
                 const daysLeft = getDaysLeft(subject.examDate);
                 const colorClass = getSubjectColor(subject.studyScore);
                 const progressClass = getProgressColor(subject.studyScore);
@@ -138,13 +163,19 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+              
+              {sortedSubjects.length === 0 && (
+                <div className="col-span-2 text-center py-10 border border-dashed rounded-xl text-muted-foreground">
+                   No subjects found.
+                </div>
+              )}
             </div>
 
             {/* Recent Study Logs Preview */}
             <div className="pt-6">
                <h2 className="text-xl font-serif font-semibold tracking-tight mb-4">Recent Activity</h2>
                <div className="space-y-3">
-                  {logs.length > 0 ? logs.map((log) => {
+                  {logs.length > 0 ? logs.slice(0, 3).map((log) => {
                     const subject = subjects.find(s => s.id === log.subjectId);
                     return (
                       <div key={log.id} className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-secondary/20 transition-colors">
@@ -195,16 +226,29 @@ export default function Dashboard() {
                     
                     {activeProblems.map((problem) => {
                        const subject = subjects.find(s => s.id === problem.subjectId);
+                       // Add a visual indicator if subject is red (low score)
+                       const isUrgent = (subject?.studyScore || 0) < 50;
+                       
                        return (
-                         <div key={problem.id} className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-900/10 dark:border-amber-800 dark:text-amber-100 relative group">
+                         <div key={problem.id} className={cn(
+                           "p-3 rounded-lg border transition-all relative group",
+                           isUrgent 
+                             ? "bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-900/10 dark:border-rose-800 dark:text-rose-100" 
+                             : "bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/10 dark:border-amber-800 dark:text-amber-100"
+                         )}>
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-amber-200/50 hover:text-amber-900">
+                               <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-white/50">
                                   <CheckCircle2 className="h-4 w-4" />
                                </Button>
                             </div>
-                            <span className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1 block">
-                               {subject?.name}
-                            </span>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold uppercase tracking-wider opacity-70 block">
+                                 {subject?.name}
+                              </span>
+                              {isUrgent && (
+                                <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" title="Low subject score"></span>
+                              )}
+                            </div>
                             <p className="text-sm font-medium leading-snug">
                                {problem.description}
                             </p>

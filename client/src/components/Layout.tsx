@@ -9,11 +9,23 @@ import {
   Plus,
   Bell,
   Search,
-  Command
+  Command,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogStudyDialog } from "@/components/LogStudyDialog";
+import { LoginDialog } from "@/components/LoginDialog";
+import { useStudy } from "@/lib/study-context";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -84,6 +96,9 @@ export function Sidebar() {
 }
 
 export function Topbar() {
+  const { searchQuery, setSearchQuery, problems } = useStudy();
+  const activeProblems = problems.filter(p => p.status === "active");
+
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md transition-all">
       <div className="flex flex-1 items-center gap-4">
@@ -94,18 +109,51 @@ export function Topbar() {
             placeholder="Search subjects or problems..."
             className="w-full bg-secondary/50 pl-9 border-transparent focus-visible:ring-primary/20 transition-all hover:bg-secondary/80 focus:bg-background focus:border-primary/30"
             data-testid="input-global-search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground" data-testid="button-notifications">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background animate-pulse"></span>
-        </Button>
-        <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-secondary-foreground ring-2 ring-background border border-border">
-          JD
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground" data-testid="button-notifications">
+              <Bell className="h-5 w-5" />
+              {activeProblems.length > 0 && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse"></span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {activeProblems.length > 0 ? (
+              <div className="max-h-[300px] overflow-y-auto">
+                 <div className="p-2 text-sm font-medium text-muted-foreground bg-secondary/20">
+                    You have {activeProblems.length} active problems to work on.
+                 </div>
+                 {activeProblems.slice(0, 3).map((p) => (
+                   <DropdownMenuItem key={p.id} className="flex flex-col items-start gap-1 p-3">
+                      <span className="font-semibold">{p.description}</span>
+                      <span className="text-xs text-muted-foreground">Needs attention</span>
+                   </DropdownMenuItem>
+                 ))}
+                 {activeProblems.length > 3 && (
+                   <div className="p-2 text-center text-xs text-muted-foreground">
+                      + {activeProblems.length - 3} more
+                   </div>
+                 )}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No new notifications. Great job!
+              </div>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <LoginDialog />
       </div>
     </header>
   );

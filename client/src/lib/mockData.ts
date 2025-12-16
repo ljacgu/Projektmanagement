@@ -1,11 +1,23 @@
 import { Plus, Calendar, BookOpen, Clock, AlertCircle, CheckCircle2, BarChart2 } from "lucide-react";
 
+export interface StudyFile {
+  id: string;
+  name: string;
+  type: string; // 'pdf', 'image', 'doc', etc.
+  url: string; // Mock URL
+  size: string;
+  uploadedAt: string;
+}
+
 export interface Subject {
   id: string;
   name: string;
   examDate: string; // ISO Date
   color: string; // Hex or tailwind class
   studyScore: number; // 0 to 100, determines color (Red -> Green)
+  targetHours: number; // New: Target study hours
+  studiedMinutes: number; // New: Track actual studied time
+  files: StudyFile[]; // New: Attached files
 }
 
 export interface Problem {
@@ -32,6 +44,18 @@ export const mockSubjects: Subject[] = [
     examDate: "2024-06-15",
     color: "bg-blue-500",
     studyScore: 35, // Low - Reddish
+    targetHours: 50,
+    studiedMinutes: 1050, // ~17.5 hours
+    files: [
+      {
+        id: "f1",
+        name: "Calculus_Syllabus.pdf",
+        type: "pdf",
+        url: "#",
+        size: "2.4 MB",
+        uploadedAt: "2024-04-10"
+      }
+    ]
   },
   {
     id: "2",
@@ -39,6 +63,9 @@ export const mockSubjects: Subject[] = [
     examDate: "2024-05-20",
     color: "bg-emerald-500",
     studyScore: 85, // High - Greenish
+    targetHours: 40,
+    studiedMinutes: 2040, // ~34 hours
+    files: []
   },
   {
     id: "3",
@@ -46,6 +73,9 @@ export const mockSubjects: Subject[] = [
     examDate: "2024-06-01",
     color: "bg-amber-500",
     studyScore: 60, // Medium - Yellowish
+    targetHours: 30,
+    studiedMinutes: 1080, // ~18 hours
+    files: []
   },
   {
     id: "4",
@@ -53,6 +83,26 @@ export const mockSubjects: Subject[] = [
     examDate: "2024-05-10",
     color: "bg-purple-500",
     studyScore: 95, // Very High - Green
+    targetHours: 60,
+    studiedMinutes: 3420, // ~57 hours
+    files: [
+      {
+        id: "f2",
+        name: "Lecture_Notes_Week1-5.docx",
+        type: "doc",
+        url: "#",
+        size: "1.8 MB",
+        uploadedAt: "2024-04-05"
+      },
+      {
+        id: "f3",
+        name: "Binary_Trees_Diagram.png",
+        type: "image",
+        url: "#",
+        size: "450 KB",
+        uploadedAt: "2024-04-20"
+      }
+    ]
   }
 ];
 
