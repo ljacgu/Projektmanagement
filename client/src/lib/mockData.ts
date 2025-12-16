@@ -1,116 +1,99 @@
-import { LucideIcon, LayoutGrid, Database, Layers, MessageSquare, BarChart3, Users, Globe, Lock, Code2, Cpu } from "lucide-react";
+import { Plus, Calendar, BookOpen, Clock, AlertCircle, CheckCircle2, BarChart2 } from "lucide-react";
 
-export interface Project {
-  id: string;
-  title: string;
-  client: string;
-  status: "active" | "review" | "completed" | "archived";
-  dueDate: string;
-  thumbnail?: string;
-  progress: number;
-  members: string[];
-}
-
-export interface Integration {
+export interface Subject {
   id: string;
   name: string;
-  description: string;
-  icon: LucideIcon;
-  status: "connected" | "disconnected" | "error";
-  lastSync: string;
-  type: "data" | "storage" | "api" | "creative";
+  examDate: string; // ISO Date
+  color: string; // Hex or tailwind class
+  studyScore: number; // 0 to 100, determines color (Red -> Green)
 }
 
-export const mockProjects: Project[] = [
+export interface Problem {
+  id: string;
+  subjectId: string;
+  description: string;
+  status: "active" | "solved" | "refresh";
+  createdAt: string;
+}
+
+export interface StudyLog {
+  id: string;
+  subjectId: string;
+  durationMinutes: number;
+  description: string; // What was studied
+  date: string;
+  solvedProblemId?: string; // If this log solved a problem
+}
+
+export const mockSubjects: Subject[] = [
   {
     id: "1",
-    title: "Neon Horizon Campaign",
-    client: "CyberCorp",
-    status: "active",
-    dueDate: "2024-06-15",
-    progress: 75,
-    members: ["alex", "sarah", "mike"]
+    name: "Advanced Calculus",
+    examDate: "2024-06-15",
+    color: "bg-blue-500",
+    studyScore: 35, // Low - Reddish
   },
   {
     id: "2",
-    title: "Eco-Future Rebranding",
-    client: "GreenSpace",
-    status: "review",
-    dueDate: "2024-05-30",
-    progress: 90,
-    members: ["sarah", "jen"]
+    name: "Organic Chemistry",
+    examDate: "2024-05-20",
+    color: "bg-emerald-500",
+    studyScore: 85, // High - Greenish
   },
   {
     id: "3",
-    title: "Quarterly Data Viz",
-    client: "FinTech Global",
+    name: "World History",
+    examDate: "2024-06-01",
+    color: "bg-amber-500",
+    studyScore: 60, // Medium - Yellowish
+  },
+  {
+    id: "4",
+    name: "Computer Science 101",
+    examDate: "2024-05-10",
+    color: "bg-purple-500",
+    studyScore: 95, // Very High - Green
+  }
+];
+
+export const mockProblems: Problem[] = [
+  {
+    id: "p1",
+    subjectId: "1",
+    description: "Understanding Green's Theorem application",
     status: "active",
-    dueDate: "2024-07-01",
-    progress: 30,
-    members: ["alex", "mike", "david"]
+    createdAt: "2024-04-20"
   },
   {
-    id: "4",
-    title: "Product Launch Video",
-    client: "TechStream",
-    status: "completed",
-    dueDate: "2024-04-10",
-    progress: 100,
-    members: ["jen", "david"]
+    id: "p2",
+    subjectId: "2",
+    description: "Memorizing functional groups",
+    status: "solved", // Solved, now a refresh reminder
+    createdAt: "2024-04-15"
+  },
+  {
+    id: "p3",
+    subjectId: "1",
+    description: "Integration by parts vs u-substitution",
+    status: "active",
+    createdAt: "2024-04-22"
   }
 ];
 
-export const mockIntegrations: Integration[] = [
+export const mockLogs: StudyLog[] = [
   {
-    id: "1",
-    name: "PostgreSQL Database",
-    description: "Direct connection to production data warehouse.",
-    icon: Database,
-    status: "connected",
-    lastSync: "2 mins ago",
-    type: "data"
+    id: "l1",
+    subjectId: "2",
+    durationMinutes: 120,
+    description: "Reviewed Alkanes and Alkenes chapters",
+    date: "2024-04-25",
+    solvedProblemId: "p2"
   },
   {
-    id: "2",
-    name: "AWS S3 Storage",
-    description: "Asset storage for high-res creative files.",
-    icon: Layers,
-    status: "connected",
-    lastSync: "1 hour ago",
-    type: "storage"
-  },
-  {
-    id: "3",
-    name: "OpenAI API",
-    description: "Generative text and image processing.",
-    icon: Cpu,
-    status: "disconnected",
-    lastSync: "Never",
-    type: "api"
-  },
-  {
-    id: "4",
-    name: "Figma Connect",
-    description: "Sync design assets and comments.",
-    icon: LayoutGrid,
-    status: "connected",
-    lastSync: "5 mins ago",
-    type: "creative"
-  },
-  {
-    id: "5",
-    name: "Stripe Payments",
-    description: "Client billing and invoicing data.",
-    icon: Lock,
-    status: "error",
-    lastSync: "2 days ago",
-    type: "api"
+    id: "l2",
+    subjectId: "4",
+    durationMinutes: 60,
+    description: "Implemented Binary Search Tree in Python",
+    date: "2024-04-26"
   }
-];
-
-export const activityFeed = [
-  { id: 1, user: "Sarah Chen", action: "uploaded 3 new assets", project: "Neon Horizon", time: "10 mins ago" },
-  { id: 2, user: "Mike Ross", action: "connected", target: "PostgreSQL DB", time: "1 hour ago" },
-  { id: 3, user: "Alex Kim", action: "commented on", project: "Eco-Future", time: "2 hours ago" },
-  { id: 4, user: "System", action: "sync completed", target: "AWS S3", time: "3 hours ago" },
 ];

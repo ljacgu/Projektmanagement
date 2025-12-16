@@ -5,7 +5,7 @@
 
 @theme inline {
   --font-sans: 'Inter', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-serif: 'Libre Baskerville', serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -57,54 +57,93 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 }
 
-/* BASE STYLES - DARK MODE DEFAULT FOR THIS APP */
+/* STUDENT FOCUS THEME - LIGHT MODE DEFAULT */
 :root {
-  /* Using a dark, refined palette for creatives */
-  --background: 240 10% 4%; /* Very dark almost black */
-  --foreground: 0 0% 98%;
+  /* Warm, paper-like background */
+  --background: 40 20% 97%; 
+  --foreground: 210 10% 20%;
 
-  --card: 240 10% 7%;
-  --card-foreground: 0 0% 98%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 10% 20%;
 
-  --popover: 240 10% 7%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 10% 20%;
 
-  /* Electric Indigo Primary */
-  --primary: 250 95% 65%;
+  /* Sage Green / Calming Teal Primary */
+  --primary: 160 40% 40%; 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 5% 15%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 40 10% 90%;
+  --secondary-foreground: 210 10% 30%;
 
-  --muted: 240 5% 15%;
-  --muted-foreground: 240 5% 65%;
+  --muted: 40 10% 90%;
+  --muted-foreground: 210 5% 50%;
 
-  --accent: 240 5% 15%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 40 20% 94%;
+  --accent-foreground: 160 40% 30%;
 
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 240 5% 15%;
-  --input: 240 5% 15%;
-  --ring: 250 95% 65%;
+  --border: 210 10% 85%;
+  --input: 210 10% 85%;
+  --ring: 160 40% 40%;
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  --chart-1: 250 95% 65%; /* Matching primary */
-  --chart-2: 190 90% 50%; /* Cyan */
-  --chart-3: 320 80% 60%; /* Pink */
-  --chart-4: 45 90% 60%;  /* Yellow */
-  --chart-5: 140 70% 50%; /* Green */
+  --chart-1: 160 40% 40%;
+  --chart-2: 30 60% 55%;
+  --chart-3: 200 50% 50%;
+  --chart-4: 280 40% 50%;
+  --chart-5: 0 60% 60%;
 
-  --sidebar: 240 10% 5%;
-  --sidebar-foreground: 240 5% 90%;
-  --sidebar-primary: 250 95% 65%;
+  --sidebar: 40 20% 95%;
+  --sidebar-foreground: 210 10% 30%;
+  --sidebar-primary: 160 40% 40%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 5% 15%;
-  --sidebar-accent-foreground: 240 5% 90%;
-  --sidebar-border: 240 5% 15%;
-  --sidebar-ring: 250 95% 65%;
+  --sidebar-accent: 40 10% 88%;
+  --sidebar-accent-foreground: 160 40% 30%;
+  --sidebar-border: 210 5% 90%;
+  --sidebar-ring: 160 40% 40%;
+}
+
+.dark {
+  --background: 210 10% 10%;
+  --foreground: 40 10% 90%;
+
+  --card: 210 10% 12%;
+  --card-foreground: 40 10% 90%;
+
+  --popover: 210 10% 12%;
+  --popover-foreground: 40 10% 90%;
+
+  --primary: 160 40% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 10% 15%;
+  --secondary-foreground: 40 10% 80%;
+
+  --muted: 210 10% 15%;
+  --muted-foreground: 210 5% 60%;
+
+  --accent: 210 10% 15%;
+  --accent-foreground: 160 40% 50%;
+
+  --destructive: 0 60% 40%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 210 10% 20%;
+  --input: 210 10% 20%;
+  --ring: 160 40% 50%;
+  
+  --sidebar: 210 10% 8%;
+  --sidebar-foreground: 40 10% 80%;
+  --sidebar-primary: 160 40% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 10% 12%;
+  --sidebar-accent-foreground: 160 40% 50%;
+  --sidebar-border: 210 10% 15%;
+  --sidebar-ring: 160 40% 50%;
 }
 
 @layer base {
@@ -115,21 +154,16 @@
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-serif tracking-tight text-foreground/90;
   }
 }
 
-/* Custom Utilities for Glassmorphism & Depth */
 @layer utilities {
-  .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  .paper-shadow {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.04);
   }
   
-  .glass-card {
-    @apply bg-card/50 backdrop-blur-sm border border-white/5 shadow-xl;
-  }
-
-  .text-glow {
-    text-shadow: 0 0 20px hsla(var(--primary), 0.5);
+  .study-card-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
   }
 }
