@@ -6,11 +6,14 @@ import {
   Calendar as CalendarIcon,
   Search,
   MoreVertical,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  Paperclip
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,9 +25,14 @@ import { cn } from "@/lib/utils";
 import { useStudy } from "@/lib/study-context";
 import { AddSubjectDialog } from "@/components/AddSubjectDialog";
 import { AddProblemDialog } from "@/components/AddProblemDialog";
+import { SubjectResourcesDialog } from "@/components/SubjectResourcesDialog";
 
 export default function SubjectsPage() {
-  const { subjects, problems, deleteSubject } = useStudy();
+  const { subjects, problems, deleteSubject, searchQuery } = useStudy();
+
+  const filteredSubjects = subjects.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getSubjectColor = (score: number) => {
     if (score >= 80) return "bg-emerald-100 border-emerald-200 text-emerald-900 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-100";
@@ -48,13 +56,14 @@ export default function SubjectsPage() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {subjects.map((subject) => {
+          {filteredSubjects.map((subject) => {
              const subjectProblems = problems.filter(p => p.subjectId === subject.id && p.status === "active");
              const problemCount = subjectProblems.length;
+             const fileCount = subject.files ? subject.files.length : 0;
              const colorClass = getSubjectColor(subject.studyScore);
              
              return (
-               <Card key={subject.id} className="overflow-hidden border-t-4 transition-all hover:shadow-md flex flex-col" style={{ borderTopColor: subject.studyScore >= 80 ? '#10b981' : subject.studyScore >= 50 ? '#f59e0b' : '#f43f5e' }}>
+               <Card key={subject.id} className="overflow-hidden border-t-4 transition-all hover:shadow-md flex flex-col group" style={{ borderTopColor: subject.studyScore >= 80 ? '#10b981' : subject.studyScore >= 50 ? '#f59e0b' : '#f43f5e' }}>
                  <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                        <Badge variant="secondary" className="font-mono text-xs">
@@ -73,6 +82,11 @@ export default function SubjectsPage() {
                                   Report Problem
                                 </DropdownMenuItem>
                              </AddProblemDialog>
+                             <SubjectResourcesDialog subjectId={subject.id} subjectName={subject.name}>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  Manage Files
+                                </DropdownMenuItem>
+                             </SubjectResourcesDialog>
                              <DropdownMenuItem className="text-destructive" onClick={() => deleteSubject(subject.id)}>
                                 Delete Subject
                              </DropdownMenuItem>
@@ -85,6 +99,14 @@ export default function SubjectsPage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                        <CalendarIcon className="h-4 w-4" />
                        <span>Exam: {subject.examDate}</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Progress</span>
+                        <span>{Math.round(subject.studiedMinutes / 60)} / {subject.targetHours} hrs</span>
+                      </div>
+                      <Progress value={subject.studyScore} className="h-1.5" />
                     </div>
                     
                     {problemCount > 0 ? (
@@ -107,19 +129,24 @@ export default function SubjectsPage() {
                        </div>
                     )}
                  </CardContent>
-                 <CardFooter className="bg-secondary/20 p-4">
+                 <CardFooter className="bg-secondary/20 p-2 grid grid-cols-2 gap-1">
                     <AddProblemDialog subjectId={subject.id} subjectName={subject.name}>
-                        <Button variant="ghost" className="w-full hover:bg-background gap-2">
-                           <Plus className="h-3.5 w-3.5" /> Add Problem
+                        <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs">
+                           <Plus className="h-3.5 w-3.5" /> Problem
                         </Button>
                     </AddProblemDialog>
+                    <SubjectResourcesDialog subjectId={subject.id} subjectName={subject.name}>
+                        <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs">
+                           <Paperclip className="h-3.5 w-3.5" /> Files ({fileCount})
+                        </Button>
+                    </SubjectResourcesDialog>
                  </CardFooter>
                </Card>
              );
           })}
           
           <AddSubjectDialog>
-            <Button variant="outline" className="h-[280px] w-full flex flex-col gap-4 border-dashed border-2 hover:border-primary/50 hover:bg-primary/5 transition-all group">
+            <Button variant="outline" className="h-[320px] w-full flex flex-col gap-4 border-dashed border-2 hover:border-primary/50 hover:bg-primary/5 transition-all group">
               <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                   <Plus className="h-8 w-8" />
               </div>

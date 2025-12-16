@@ -19,19 +19,22 @@ export function AddSubjectDialog({ children }: { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [examDate, setExamDate] = useState("");
+  const [targetHours, setTargetHours] = useState("20");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !examDate) return;
+    if (!name || !examDate || !targetHours) return;
 
     addSubject({
       name,
       examDate,
+      targetHours: parseInt(targetHours)
     });
 
     setOpen(false);
     setName("");
     setExamDate("");
+    setTargetHours("20");
   };
 
   return (
@@ -47,7 +50,7 @@ export function AddSubjectDialog({ children }: { children?: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle>Add New Subject</DialogTitle>
           <DialogDescription>
-            Track a new course and its exam date.
+            Track a new course, set your goal, and exam date.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -70,6 +73,18 @@ export function AddSubjectDialog({ children }: { children?: React.ReactNode }) {
               onChange={(e) => setExamDate(e.target.value)}
               required
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="targetHours">Self-study Workload (Hours)</Label>
+            <Input
+              id="targetHours"
+              type="number"
+              min="1"
+              value={targetHours}
+              onChange={(e) => setTargetHours(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">Estimate hours needed to prepare fully.</p>
           </div>
           <DialogFooter>
             <Button type="submit">Create Subject</Button>
