@@ -34,7 +34,7 @@ export default function Dashboard() {
   // Filter problems by search query
   const filteredProblems = problems.filter(p => 
     p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    subjects.find(s => s.id === p.subjectId)?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (subjects.find(s => s.id === p.subjectId)?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Sort problems: Problems from Red subjects first
