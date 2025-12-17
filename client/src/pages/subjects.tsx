@@ -62,6 +62,11 @@ export default function SubjectsPage() {
              const fileCount = subject.files ? subject.files.length : 0;
              const colorClass = getSubjectColor(subject.studyScore);
              
+             // Safety checks for new fields
+             const studiedMinutes = subject.studiedMinutes || 0;
+             const targetHours = subject.targetHours || 10;
+             const studiedHours = Math.round(studiedMinutes / 60);
+             
              return (
                <Card key={subject.id} className="overflow-hidden border-t-4 transition-all hover:shadow-md flex flex-col group" style={{ borderTopColor: subject.studyScore >= 80 ? '#10b981' : subject.studyScore >= 50 ? '#f59e0b' : '#f43f5e' }}>
                  <CardHeader className="pb-3">
@@ -104,7 +109,7 @@ export default function SubjectsPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Progress</span>
-                        <span>{Math.round(subject.studiedMinutes / 60)} / {subject.targetHours} hrs</span>
+                        <span>{studiedHours} / {targetHours} hrs</span>
                       </div>
                       <Progress value={subject.studyScore} className="h-1.5" />
                     </div>
