@@ -1,28 +1,68 @@
 import { Layout } from "@/components/Layout";
 import { useStudy } from "@/lib/study-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, BookOpen, CheckCircle2 } from "lucide-react";
+import { Clock, BookOpen, CheckCircle2, GraduationCap, Award } from "lucide-react";
+import { isBefore, parseISO } from "date-fns";
 
 export default function StatsPage() {
   const { logs, subjects, problems } = useStudy();
+
+  const passedExams = subjects.filter(s => s.grade !== undefined || (s.examDate && isBefore(parseISO(s.examDate), new Date()) && s.studyScore > 50));
+  
+  const averageGrade = passedExams.length > 0 
+    ? passedExams.reduce((acc, s) => acc + (s.grade || s.studyScore), 0) / passedExams.length 
+    : 0;
 
   return (
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-serif font-bold tracking-tight">Study Logs</h1>
-          <p className="text-muted-foreground">A history of all your study sessions and solved problems.</p>
+          <h1 className="text-2xl font-serif font-bold tracking-tight">Study Analytics</h1>
+          <p className="text-muted-foreground">Track your history and academic performance.</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-12">
-          <div className="col-span-12 lg:col-span-8">
-            <Card className="h-full">
+          {/* Main Stats Column */}
+          <div className="col-span-12 lg:col-span-8 space-y-6">
+            
+            {/* Academic Overview */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Average Grade</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold font-serif text-primary">{averageGrade.toFixed(1)}</span>
+                    <span className="text-sm text-muted-foreground">/ 100</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Based on {passedExams.length} passed subjects</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Study Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold font-serif">
+                      {Math.round(logs.reduce((acc, log) => acc + log.durationMinutes, 0) / 60 * 10) / 10}
+                    </span>
+                    <span className="text-sm text-muted-foreground">hours</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Across all subjects</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="h-[500px]">
               <CardHeader>
                 <CardTitle>Session History</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[600px] pr-4">
+                <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-6">
                     {logs.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -73,28 +113,42 @@ export default function StatsPage() {
             </Card>
           </div>
 
+          {/* Sidebar - Old Exams */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            <Card>
+            <Card className="h-full">
               <CardHeader>
-                <CardTitle>Total Stats</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  Academic History
+                </CardTitle>
+                <CardDescription>Past exams and grades</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                  <span className="text-muted-foreground">Total Sessions</span>
-                  <span className="font-mono font-bold text-xl">{logs.length}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                  <span className="text-muted-foreground">Total Hours</span>
-                  <span className="font-mono font-bold text-xl">
-                    {Math.round(logs.reduce((acc, log) => acc + log.durationMinutes, 0) / 60 * 10) / 10}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                   <span className="text-muted-foreground">Problems Solved</span>
-                   <span className="font-mono font-bold text-xl text-emerald-600">
-                     {logs.filter(l => l.solvedProblemId).length}
-                   </span>
-                </div>
+              <CardContent>
+                <ScrollArea className="h-[600px] pr-4">
+                  <div className="space-y-4">
+                    {passedExams.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        No past exams recorded yet.
+                      </div>
+                    ) : (
+                      passedExams.map((subject) => (
+                        <div key={subject.id} className="p-4 rounded-lg border bg-card/50 hover:bg-card transition-all">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold">{subject.name}</h4>
+                            <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">
+                              <Award className="h-3 w-3" />
+                              {subject.grade || subject.studyScore}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Exam: {subject.examDate}</span>
+                            <span>{subject.grade ? "Final Grade" : "Predicted"}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>

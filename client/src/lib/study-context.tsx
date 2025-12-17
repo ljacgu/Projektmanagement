@@ -25,11 +25,45 @@ interface StudyContextType {
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
 
 export function StudyProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>({ name: "Jane", field: "Computer Science" }); // Default user
-  const [subjects, setSubjects] = useState<Subject[]>(mockSubjects);
-  const [problems, setProblems] = useState<Problem[]>(mockProblems);
-  const [logs, setLogs] = useState<StudyLog[]>(mockLogs);
+  // Initialize state from localStorage or mockData
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem("studyflow_user");
+    return saved ? JSON.parse(saved) : { name: "Jane", field: "Computer Science" };
+  });
+  
+  const [subjects, setSubjects] = useState<Subject[]>(() => {
+    const saved = localStorage.getItem("studyflow_subjects");
+    return saved ? JSON.parse(saved) : mockSubjects;
+  });
+  
+  const [problems, setProblems] = useState<Problem[]>(() => {
+    const saved = localStorage.getItem("studyflow_problems");
+    return saved ? JSON.parse(saved) : mockProblems;
+  });
+  
+  const [logs, setLogs] = useState<StudyLog[]>(() => {
+    const saved = localStorage.getItem("studyflow_logs");
+    return saved ? JSON.parse(saved) : mockLogs;
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Persist state changes
+  useEffect(() => {
+    localStorage.setItem("studyflow_user", JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("studyflow_subjects", JSON.stringify(subjects));
+  }, [subjects]);
+
+  useEffect(() => {
+    localStorage.setItem("studyflow_problems", JSON.stringify(problems));
+  }, [problems]);
+
+  useEffect(() => {
+    localStorage.setItem("studyflow_logs", JSON.stringify(logs));
+  }, [logs]);
 
   const login = (name: string, field: string) => {
     setUser({ name, field });
@@ -82,8 +116,8 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
     setSubjects(subjects.map(s => {
       if (s.id === newLog.subjectId) {
-        const newStudiedMinutes = s.studiedMinutes + newLog.durationMinutes;
-        const targetMinutes = s.targetHours * 60;
+        const newStudiedMinutes = (s.studiedMinutes || 0) + newLog.durationMinutes;
+        const targetMinutes = (s.targetHours || 10) * 60;
         
         // Calculate score based on target hours
         const safeTarget = targetMinutes > 0 ? targetMinutes : 600; // Default 10h if missing
@@ -104,7 +138,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           id: Math.random().toString(36).substr(2, 9),
           uploadedAt: new Date().toISOString().split("T")[0],
         };
-        return { ...s, files: [...s.files, file] };
+        return { ...s, files: [...(s.files || []), file] };
       }
       return s;
     }));
