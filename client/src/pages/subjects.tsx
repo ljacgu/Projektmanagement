@@ -8,7 +8,8 @@ import {
   MoreVertical,
   AlertCircle,
   Clock,
-  Paperclip
+  Paperclip,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -21,11 +22,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useStudy } from "@/lib/study-context";
 import { AddSubjectDialog } from "@/components/AddSubjectDialog";
 import { AddProblemDialog } from "@/components/AddProblemDialog";
 import { SubjectResourcesDialog } from "@/components/SubjectResourcesDialog";
+import { useState } from "react";
 
 export default function SubjectsPage() {
   const { subjects, problems, deleteSubject, searchQuery } = useStudy();
@@ -115,15 +122,29 @@ export default function SubjectsPage() {
                     </div>
                     
                     {problemCount > 0 ? (
-                       <div className="p-3 rounded-md bg-amber-50 border border-amber-100 text-amber-800 flex items-start gap-3">
-                          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                          <div className="text-sm">
-                             <span className="font-semibold block">{problemCount} Active Problems</span>
-                             <span className="text-xs opacity-90 truncate max-w-[180px]">
-                               {subjectProblems[0].description}
-                             </span>
-                          </div>
-                       </div>
+                       <DropdownMenu>
+                         <DropdownMenuTrigger asChild>
+                           <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-md bg-amber-50 border border-amber-100 text-amber-800 hover:bg-amber-100 hover:text-amber-900 group/problems">
+                              <div className="flex items-start gap-3 text-left">
+                                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                                <div>
+                                   <span className="font-semibold block text-sm">{problemCount} Active Problems</span>
+                                   <span className="text-xs opacity-90">Click to view all</span>
+                                </div>
+                              </div>
+                              <ChevronDown className="h-4 w-4 opacity-50 group-hover/problems:opacity-100" />
+                           </Button>
+                         </DropdownMenuTrigger>
+                         <DropdownMenuContent className="w-[300px] max-h-[300px] overflow-y-auto">
+                            <DropdownMenuLabel>Active Problems</DropdownMenuLabel>
+                            {subjectProblems.map(p => (
+                              <DropdownMenuItem key={p.id} className="flex flex-col items-start gap-1 p-3 cursor-default focus:bg-transparent">
+                                <span className="text-sm font-medium">{p.description}</span>
+                                <span className="text-xs text-muted-foreground">{p.createdAt}</span>
+                              </DropdownMenuItem>
+                            ))}
+                         </DropdownMenuContent>
+                       </DropdownMenu>
                     ) : (
                        <div className="p-3 rounded-md bg-emerald-50 border border-emerald-100 text-emerald-800 flex items-start gap-3">
                           <BookOpen className="h-4 w-4 mt-0.5 shrink-0" />

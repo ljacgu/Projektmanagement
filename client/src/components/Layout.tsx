@@ -35,7 +35,7 @@ export function Sidebar() {
     { href: "/subjects", label: "Subjects", icon: BookOpen },
     { href: "/calendar", label: "Calendar", icon: CalendarIcon },
     { href: "/stats", label: "Statistics", icon: BarChart2 },
-    { href: "/settings", label: "Settings", icon: Settings },
+    // Removed Settings as requested
   ];
 
   return (

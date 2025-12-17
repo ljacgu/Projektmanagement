@@ -18,6 +18,7 @@ export interface Subject {
   targetHours: number; // New: Target study hours
   studiedMinutes: number; // New: Track actual studied time
   files: StudyFile[]; // New: Attached files
+  grade?: number; // Optional: Grade for past exams (e.g., 1-100 or 1-6 scale)
 }
 
 export interface Problem {
@@ -103,6 +104,28 @@ export const mockSubjects: Subject[] = [
         uploadedAt: "2024-04-20"
       }
     ]
+  },
+  {
+    id: "5",
+    name: "Physics I",
+    examDate: "2024-01-15",
+    color: "bg-indigo-500",
+    studyScore: 100,
+    targetHours: 40,
+    studiedMinutes: 2400,
+    files: [],
+    grade: 92 // Past exam with grade
+  },
+  {
+    id: "6",
+    name: "English Literature",
+    examDate: "2023-12-10",
+    color: "bg-rose-500",
+    studyScore: 100,
+    targetHours: 20,
+    studiedMinutes: 1200,
+    files: [],
+    grade: 88 // Past exam with grade
   }
 ];
 
