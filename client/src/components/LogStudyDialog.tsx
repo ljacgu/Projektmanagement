@@ -121,26 +121,18 @@ export function LogStudyDialog({ children }: { children?: React.ReactNode }) {
                 <CheckCircle2 className="h-4 w-4" />
                 Did you solve a problem?
               </Label>
-              <Select 
-                value={solvedProblem} 
-                onValueChange={(value) => {
-                  if (value) {
-                    setSolvedProblem(value);
-                  }
-                }}
+              <select
+                value={solvedProblem}
+                onChange={(e) => setSolvedProblem(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Select solved problem" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  <SelectItem value="none">No specific problem solved</SelectItem>
-                  {activeProblems.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      <span className="block max-w-[280px] truncate">{p.description}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="none">No specific problem solved</option>
+                {activeProblems.map((p) => (
+                  <option key={p.id} value={String(p.id)}>
+                    {p.description}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
           
