@@ -25,7 +25,7 @@ const resultSchema = z.object({
 
 type ResultFormValues = z.infer<typeof resultSchema>;
 
-export function SubjectResultDialog({ children, subjectId, subjectName }: { children: React.ReactNode; subjectId: string; subjectName: string }) {
+export function SubjectResultDialog({ children, subjectId, subjectName }: { children: React.ReactNode; subjectId: number; subjectName: string }) {
   const [open, setOpen] = useState(false);
   const { updateSubject, addFile, subjects } = useStudy();
   
@@ -34,26 +34,27 @@ export function SubjectResultDialog({ children, subjectId, subjectName }: { chil
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ResultFormValues>({
     resolver: zodResolver(resultSchema),
     defaultValues: {
-      grade: subject?.grade || 4.0,
+      grade: subject?.grade ? subject.grade / 10 : 4.0,
       notes: subject?.notes || ""
     }
   });
 
   const onSubmit = (data: ResultFormValues) => {
-    // 1. Update grade and notes
-    updateSubject(subjectId, { 
-      grade: data.grade,
+    // 1. Update grade and notes (convert to integer for storage)
+    updateSubject(Number(subjectId), { 
+      grade: Math.round(data.grade * 10),
       notes: data.notes 
     });
 
     // 2. Mock file upload if file provided
     if (data.file && data.file.length > 0) {
         const file = data.file[0];
-        addFile(subjectId, {
+        addFile(Number(subjectId), {
             name: file.name,
             type: "exam_result",
             size: `${(file.size / 1024).toFixed(1)} KB`,
-            url: "#"
+            url: "#",
+            uploadedAt: new Date().toISOString().split("T")[0],
         });
     }
 

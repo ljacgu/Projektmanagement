@@ -1,5 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { mockSubjects, mockProblems, mockLogs, Subject, Problem, StudyLog, StudyFile, PersonalEvent } from "./mockData";
+import React, { createContext, useContext, useState } from "react";
+import {
+  useSubjects,
+  useProblems,
+  useStudyLogs,
+  usePersonalEvents,
+  useCreateSubject,
+  useUpdateSubject,
+  useDeleteSubject,
+  useCreateProblem,
+  useUpdateProblem,
+  useCreateStudyLog,
+  useCreatePersonalEvent,
+  useDeletePersonalEvent,
+  useCreateFile,
+} from "./hooks";
+import type { Subject, InsertSubject, InsertProblem, InsertStudyLog, InsertPersonalEvent, InsertStudyFile } from "@shared/schema";
 
 export interface User {
   name: string;
@@ -10,189 +25,128 @@ interface StudyContextType {
   user: User | null;
   login: (name: string, field: string) => void;
   subjects: Subject[];
-  problems: Problem[];
-  logs: StudyLog[];
-  personalEvents: PersonalEvent[];
+  isLoadingSubjects: boolean;
+  problems: any[];
+  isLoadingProblems: boolean;
+  logs: any[];
+  isLoadingLogs: boolean;
+  personalEvents: any[];
+  isLoadingEvents: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  addSubject: (subject: Omit<Subject, "id" | "studyScore" | "color" | "studiedMinutes" | "files">) => void;
-  updateSubject: (id: string, updates: Partial<Subject>) => void;
-  deleteSubject: (id: string) => void;
-  addProblem: (problem: Omit<Problem, "id" | "status" | "createdAt">) => void;
-  addLog: (log: Omit<StudyLog, "id">) => void;
-  solveProblem: (id: string) => void;
-  addFile: (subjectId: string, file: Omit<StudyFile, "id" | "uploadedAt">) => void;
-  addPersonalEvent: (event: Omit<PersonalEvent, "id">) => void;
-  deletePersonalEvent: (id: string) => void;
+  addSubject: (subject: Omit<InsertSubject, "studyScore" | "studiedMinutes">) => void;
+  updateSubject: (id: number, updates: Partial<InsertSubject>) => void;
+  deleteSubject: (id: number) => void;
+  addProblem: (problem: Omit<InsertProblem, "status">) => void;
+  addLog: (log: InsertStudyLog) => void;
+  solveProblem: (id: number) => void;
+  addFile: (subjectId: number, file: Omit<InsertStudyFile, "subjectId">) => void;
+  addPersonalEvent: (event: InsertPersonalEvent) => void;
+  deletePersonalEvent: (id: number) => void;
 }
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
 
 export function StudyProvider({ children }: { children: React.ReactNode }) {
-  // Initialize state from localStorage or mockData
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("studyflow_user_v2");
     return saved ? JSON.parse(saved) : { name: "Jane", field: "Computer Science" };
   });
-  
-  const [subjects, setSubjects] = useState<Subject[]>(() => {
-    const saved = localStorage.getItem("studyflow_subjects_v2");
-    return saved ? JSON.parse(saved) : mockSubjects;
-  });
-  
-  const [problems, setProblems] = useState<Problem[]>(() => {
-    const saved = localStorage.getItem("studyflow_problems_v2");
-    return saved ? JSON.parse(saved) : mockProblems;
-  });
-  
-  const [logs, setLogs] = useState<StudyLog[]>(() => {
-    const saved = localStorage.getItem("studyflow_logs_v2");
-    return saved ? JSON.parse(saved) : mockLogs;
-  });
-
-  const [personalEvents, setPersonalEvents] = useState<PersonalEvent[]>(() => {
-    const saved = localStorage.getItem("studyflow_personal_events_v2");
-    return saved ? JSON.parse(saved) : [];
-  });
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Persist state changes
-  useEffect(() => {
-    localStorage.setItem("studyflow_user_v2", JSON.stringify(user));
-  }, [user]);
+  // Queries
+  const { data: subjects = [], isLoading: isLoadingSubjects } = useSubjects();
+  const { data: problems = [], isLoading: isLoadingProblems } = useProblems();
+  const { data: logs = [], isLoading: isLoadingLogs } = useStudyLogs();
+  const { data: personalEvents = [], isLoading: isLoadingEvents } = usePersonalEvents();
 
-  useEffect(() => {
-    localStorage.setItem("studyflow_subjects_v2", JSON.stringify(subjects));
-  }, [subjects]);
-
-  useEffect(() => {
-    localStorage.setItem("studyflow_problems_v2", JSON.stringify(problems));
-  }, [problems]);
-
-  useEffect(() => {
-    localStorage.setItem("studyflow_logs_v2", JSON.stringify(logs));
-  }, [logs]);
-
-  useEffect(() => {
-    localStorage.setItem("studyflow_personal_events_v2", JSON.stringify(personalEvents));
-  }, [personalEvents]);
+  // Mutations
+  const createSubjectMutation = useCreateSubject();
+  const updateSubjectMutation = useUpdateSubject();
+  const deleteSubjectMutation = useDeleteSubject();
+  const createProblemMutation = useCreateProblem();
+  const updateProblemMutation = useUpdateProblem();
+  const createLogMutation = useCreateStudyLog();
+  const createEventMutation = useCreatePersonalEvent();
+  const deleteEventMutation = useDeletePersonalEvent();
+  const createFileMutation = useCreateFile();
 
   const login = (name: string, field: string) => {
-    setUser({ name, field });
+    const newUser = { name, field };
+    setUser(newUser);
+    localStorage.setItem("studyflow_user_v2", JSON.stringify(newUser));
   };
 
-  const addSubject = (newSubject: Omit<Subject, "id" | "studyScore" | "color" | "studiedMinutes" | "files">) => {
-    const subject: Subject = {
+  const addSubject = (newSubject: Omit<InsertSubject, "studyScore" | "studiedMinutes">) => {
+    createSubjectMutation.mutate({
       ...newSubject,
-      id: Math.random().toString(36).substr(2, 9),
       studyScore: 0,
-      color: "bg-rose-500", // Default start color
       studiedMinutes: 0,
-      files: []
-    };
-    setSubjects([...subjects, subject]);
+    });
   };
 
-  const updateSubject = (id: string, updates: Partial<Subject>) => {
-    setSubjects(subjects.map(s => s.id === id ? { ...s, ...updates } : s));
+  const updateSubject = (id: number, updates: Partial<InsertSubject>) => {
+    updateSubjectMutation.mutate({ id, updates });
   };
 
-  const deleteSubject = (id: string) => {
-    setSubjects(subjects.filter((s) => s.id !== id));
-    setProblems(problems.filter((p) => p.subjectId !== id));
-    setLogs(logs.filter((l) => l.subjectId !== id));
+  const deleteSubject = (id: number) => {
+    deleteSubjectMutation.mutate(id);
   };
 
-  const addProblem = (newProblem: Omit<Problem, "id" | "status" | "createdAt">) => {
-    const problem: Problem = {
+  const addProblem = (newProblem: Omit<InsertProblem, "status">) => {
+    createProblemMutation.mutate({
       ...newProblem,
-      id: Math.random().toString(36).substr(2, 9),
       status: "active",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setProblems([...problems, problem]);
+    });
   };
 
-  const solveProblem = (id: string) => {
-    setProblems(problems.map(p => 
-      p.id === id ? { ...p, status: "refresh" } : p
-    ));
+  const solveProblem = (id: number) => {
+    updateProblemMutation.mutate({ id, updates: { status: "refresh" } });
   };
 
-  const addLog = (newLog: Omit<StudyLog, "id">) => {
-    const log: StudyLog = {
-      ...newLog,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setLogs([log, ...logs]);
-
-    if (newLog.solvedProblemId) {
-      solveProblem(newLog.solvedProblemId);
-    }
-
-    setSubjects(subjects.map(s => {
-      if (s.id === newLog.subjectId) {
-        const newStudiedMinutes = (s.studiedMinutes || 0) + newLog.durationMinutes;
-        const targetMinutes = (s.targetHours || 10) * 60;
-        
-        // Calculate score based on target hours
-        const safeTarget = targetMinutes > 0 ? targetMinutes : 600; // Default 10h if missing
-        
-        const newScore = Math.min(100, Math.floor((newStudiedMinutes / safeTarget) * 100));
-        
-        return { ...s, studyScore: newScore, studiedMinutes: newStudiedMinutes };
-      }
-      return s;
-    }));
+  const addLog = (newLog: InsertStudyLog) => {
+    createLogMutation.mutate(newLog);
   };
 
-  const addFile = (subjectId: string, newFile: Omit<StudyFile, "id" | "uploadedAt">) => {
-    setSubjects(subjects.map(s => {
-      if (s.id === subjectId) {
-        const file: StudyFile = {
-          ...newFile,
-          id: Math.random().toString(36).substr(2, 9),
-          uploadedAt: new Date().toISOString().split("T")[0],
-        };
-        return { ...s, files: [...(s.files || []), file] };
-      }
-      return s;
-    }));
+  const addFile = (subjectId: number, newFile: Omit<InsertStudyFile, "subjectId">) => {
+    createFileMutation.mutate({ subjectId, file: newFile });
   };
 
-  const addPersonalEvent = (newEvent: Omit<PersonalEvent, "id">) => {
-    const event: PersonalEvent = {
-      ...newEvent,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setPersonalEvents([...personalEvents, event]);
+  const addPersonalEvent = (newEvent: InsertPersonalEvent) => {
+    createEventMutation.mutate(newEvent);
   };
 
-  const deletePersonalEvent = (id: string) => {
-    setPersonalEvents(personalEvents.filter(e => e.id !== id));
+  const deletePersonalEvent = (id: number) => {
+    deleteEventMutation.mutate(id);
   };
 
   return (
-    <StudyContext.Provider value={{ 
-      user, 
-      login,
-      subjects, 
-      problems, 
-      logs, 
-      personalEvents,
-      searchQuery,
-      setSearchQuery,
-      addSubject, 
-      updateSubject,
-      deleteSubject, 
-      addProblem, 
-      addLog, 
-      solveProblem,
-      addFile,
-      addPersonalEvent,
-      deletePersonalEvent
-    }}>
+    <StudyContext.Provider
+      value={{
+        user,
+        login,
+        subjects,
+        isLoadingSubjects,
+        problems,
+        isLoadingProblems,
+        logs,
+        isLoadingLogs,
+        personalEvents,
+        isLoadingEvents,
+        searchQuery,
+        setSearchQuery,
+        addSubject,
+        updateSubject,
+        deleteSubject,
+        addProblem,
+        addLog,
+        solveProblem,
+        addFile,
+        addPersonalEvent,
+        deletePersonalEvent,
+      }}
+    >
       {children}
     </StudyContext.Provider>
   );
