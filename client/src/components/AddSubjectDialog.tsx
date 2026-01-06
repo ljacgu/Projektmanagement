@@ -25,10 +25,14 @@ export function AddSubjectDialog({ children }: { children?: React.ReactNode }) {
     e.preventDefault();
     if (!name || !examDate || !targetHours) return;
 
+    const colors = ["bg-emerald-500", "bg-amber-500", "bg-blue-500", "bg-violet-500", "bg-rose-500", "bg-pink-500"];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
     addSubject({
       name,
       examDate,
-      targetHours: parseInt(targetHours)
+      targetHours: parseInt(targetHours),
+      color: randomColor,
     });
 
     setOpen(false);
