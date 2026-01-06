@@ -184,9 +184,13 @@ export default function CalendarPage() {
                         // We use Custom Day component instead of modifiers to avoid hydration issues with nested buttons
                         components={{
                           Day: (props: any) => {
-                            const { date: dayDate, displayMonth } = props;
+                            const dayDate = props.date || props.day;
+                            const displayMonth = props.displayMonth;
+
+                            if (!dayDate) return <div className="invisible" />;
+
                             // Only render days that belong to the current month or are visible
-                            if (dayDate.getMonth() !== displayMonth.getMonth() && props.hidden) {
+                            if (displayMonth && dayDate.getMonth() !== displayMonth.getMonth() && props.hidden) {
                                 return <div className="invisible" />;
                             }
                             
