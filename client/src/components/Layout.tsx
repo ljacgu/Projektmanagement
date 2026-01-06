@@ -10,7 +10,10 @@ import {
   Bell,
   Search,
   Command,
-  User
+  User,
+  Menu,
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { differenceInDays, parseISO, isAfter } from "date-fns";
+import { differenceInDays, parseISO, isAfter, format } from "date-fns";
+import { useState } from "react";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -145,6 +149,132 @@ export function Sidebar() {
   );
 }
 
+export function MobileMenu() {
+  const [location, setLocation] = useLocation();
+  const { subjects } = useStudy();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const today = new Date();
+  const upcomingExams = subjects
+    .filter(s => {
+      try {
+        if (!s.examDate) return false;
+        const examDate = parseISO(s.examDate);
+        return isAfter(examDate, today) || differenceInDays(examDate, today) === 0;
+      } catch {
+        return false;
+      }
+    })
+    .sort((a, b) => {
+      try {
+        return parseISO(a.examDate).getTime() - parseISO(b.examDate).getTime();
+      } catch {
+        return 0;
+      }
+    });
+
+  const nearestExam = upcomingExams[0];
+  const daysUntilExam = nearestExam 
+    ? Math.max(0, differenceInDays(parseISO(nearestExam.examDate), today))
+    : null;
+
+  const navItems = [
+    { href: "/", label: "Overview", icon: LayoutGrid },
+    { href: "/subjects", label: "Subjects", icon: BookOpen },
+    { href: "/calendar", label: "Calendar", icon: CalendarIcon },
+    { href: "/stats", label: "Statistics", icon: BarChart2 },
+  ];
+
+  const handleNavClick = (href: string) => {
+    setLocation(href);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="md:hidden">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-muted-foreground hover:text-foreground"
+        data-testid="button-mobile-menu"
+      >
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-16 w-full bg-background border-b shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
+          <nav className="p-4 space-y-1">
+            {navItems.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => handleNavClick(item.href)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                  data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="border-t p-4">
+            <div className="rounded-lg bg-secondary/50 p-4 border">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className={cn(
+                  "h-4 w-4",
+                  daysUntilExam !== null && daysUntilExam <= 3 ? "text-destructive" : "text-primary"
+                )} />
+                <span className="text-sm font-semibold">Next Exam Reminder</span>
+              </div>
+              {nearestExam ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{nearestExam.name}</span>
+                    <span className={cn(
+                      "text-sm font-bold",
+                      daysUntilExam !== null && daysUntilExam <= 3 ? "text-destructive" : "text-primary"
+                    )}>
+                      {daysUntilExam === 0 ? "Today!" : `${daysUntilExam} day${daysUntilExam === 1 ? '' : 's'}`}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(parseISO(nearestExam.examDate), "EEEE, MMMM d, yyyy")}
+                  </div>
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        daysUntilExam !== null && daysUntilExam <= 3 ? "bg-destructive" : "bg-primary"
+                      )} 
+                      style={{ width: `${nearestExam.studyScore}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground text-right">
+                    {nearestExam.studyScore}% prepared
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  No upcoming exams scheduled
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Topbar() {
   const { searchQuery, setSearchQuery, problems } = useStudy();
   const activeProblems = problems.filter(p => p.status === "active");
@@ -152,6 +282,7 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md transition-all">
       <div className="flex flex-1 items-center gap-4">
+        <MobileMenu />
         <div className="relative w-full max-w-md hidden md:block group">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           <Input
