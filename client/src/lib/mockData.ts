@@ -54,28 +54,19 @@ export const mockSubjects: Subject[] = [
     name: "Advanced Calculus",
     examDate: "2024-06-15",
     color: "bg-blue-500",
-    studyScore: 35, // Low - Reddish
+    studyScore: 0,
     targetHours: 50,
-    studiedMinutes: 1050, // ~17.5 hours
-    files: [
-      {
-        id: "f1",
-        name: "Calculus_Syllabus.pdf",
-        type: "pdf",
-        url: "#",
-        size: "2.4 MB",
-        uploadedAt: "2024-04-10"
-      }
-    ]
+    studiedMinutes: 0,
+    files: []
   },
   {
     id: "2",
     name: "Organic Chemistry",
     examDate: "2024-05-20",
     color: "bg-emerald-500",
-    studyScore: 85, // High - Greenish
+    studyScore: 0,
     targetHours: 40,
-    studiedMinutes: 2040, // ~34 hours
+    studiedMinutes: 0,
     files: []
   },
   {
@@ -83,9 +74,9 @@ export const mockSubjects: Subject[] = [
     name: "World History",
     examDate: "2024-06-01",
     color: "bg-amber-500",
-    studyScore: 60, // Medium - Yellowish
+    studyScore: 0,
     targetHours: 30,
-    studiedMinutes: 1080, // ~18 hours
+    studiedMinutes: 0,
     files: []
   },
   {
@@ -93,90 +84,33 @@ export const mockSubjects: Subject[] = [
     name: "Computer Science 101",
     examDate: "2024-05-10",
     color: "bg-purple-500",
-    studyScore: 95, // Very High - Green
+    studyScore: 0,
     targetHours: 60,
-    studiedMinutes: 3420, // ~57 hours
-    files: [
-      {
-        id: "f2",
-        name: "Lecture_Notes_Week1-5.docx",
-        type: "doc",
-        url: "#",
-        size: "1.8 MB",
-        uploadedAt: "2024-04-05"
-      },
-      {
-        id: "f3",
-        name: "Binary_Trees_Diagram.png",
-        type: "image",
-        url: "#",
-        size: "450 KB",
-        uploadedAt: "2024-04-20"
-      }
-    ]
+    studiedMinutes: 0,
+    files: []
   },
   {
     id: "5",
     name: "Physics I",
     examDate: "2024-01-15",
     color: "bg-indigo-500",
-    studyScore: 100,
+    studyScore: 0,
     targetHours: 40,
-    studiedMinutes: 2400,
+    studiedMinutes: 0,
     files: []
-    // Removed default grade
   },
   {
     id: "6",
     name: "English Literature",
     examDate: "2023-12-10",
     color: "bg-rose-500",
-    studyScore: 100,
+    studyScore: 0,
     targetHours: 20,
-    studiedMinutes: 1200,
+    studiedMinutes: 0,
     files: []
-    // Removed default grade
   }
 ];
 
-export const mockProblems: Problem[] = [
-  {
-    id: "p1",
-    subjectId: "1",
-    description: "Understanding Green's Theorem application",
-    status: "active",
-    createdAt: "2024-04-20"
-  },
-  {
-    id: "p2",
-    subjectId: "2",
-    description: "Memorizing functional groups",
-    status: "solved", // Solved, now a refresh reminder
-    createdAt: "2024-04-15"
-  },
-  {
-    id: "p3",
-    subjectId: "1",
-    description: "Integration by parts vs u-substitution",
-    status: "active",
-    createdAt: "2024-04-22"
-  }
-];
+export const mockProblems: Problem[] = [];
 
-export const mockLogs: StudyLog[] = [
-  {
-    id: "l1",
-    subjectId: "2",
-    durationMinutes: 120,
-    description: "Reviewed Alkanes and Alkenes chapters",
-    date: "2024-04-25",
-    solvedProblemId: "p2"
-  },
-  {
-    id: "l2",
-    subjectId: "4",
-    durationMinutes: 60,
-    description: "Implemented Binary Search Tree in Python",
-    date: "2024-04-26"
-  }
-];
+export const mockLogs: StudyLog[] = [];

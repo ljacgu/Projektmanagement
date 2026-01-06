@@ -31,27 +31,27 @@ const StudyContext = createContext<StudyContextType | undefined>(undefined);
 export function StudyProvider({ children }: { children: React.ReactNode }) {
   // Initialize state from localStorage or mockData
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("studyflow_user");
+    const saved = localStorage.getItem("studyflow_user_v2");
     return saved ? JSON.parse(saved) : { name: "Jane", field: "Computer Science" };
   });
   
   const [subjects, setSubjects] = useState<Subject[]>(() => {
-    const saved = localStorage.getItem("studyflow_subjects");
+    const saved = localStorage.getItem("studyflow_subjects_v2");
     return saved ? JSON.parse(saved) : mockSubjects;
   });
   
   const [problems, setProblems] = useState<Problem[]>(() => {
-    const saved = localStorage.getItem("studyflow_problems");
+    const saved = localStorage.getItem("studyflow_problems_v2");
     return saved ? JSON.parse(saved) : mockProblems;
   });
   
   const [logs, setLogs] = useState<StudyLog[]>(() => {
-    const saved = localStorage.getItem("studyflow_logs");
+    const saved = localStorage.getItem("studyflow_logs_v2");
     return saved ? JSON.parse(saved) : mockLogs;
   });
 
   const [personalEvents, setPersonalEvents] = useState<PersonalEvent[]>(() => {
-    const saved = localStorage.getItem("studyflow_personal_events");
+    const saved = localStorage.getItem("studyflow_personal_events_v2");
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -59,23 +59,23 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
   // Persist state changes
   useEffect(() => {
-    localStorage.setItem("studyflow_user", JSON.stringify(user));
+    localStorage.setItem("studyflow_user_v2", JSON.stringify(user));
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem("studyflow_subjects", JSON.stringify(subjects));
+    localStorage.setItem("studyflow_subjects_v2", JSON.stringify(subjects));
   }, [subjects]);
 
   useEffect(() => {
-    localStorage.setItem("studyflow_problems", JSON.stringify(problems));
+    localStorage.setItem("studyflow_problems_v2", JSON.stringify(problems));
   }, [problems]);
 
   useEffect(() => {
-    localStorage.setItem("studyflow_logs", JSON.stringify(logs));
+    localStorage.setItem("studyflow_logs_v2", JSON.stringify(logs));
   }, [logs]);
 
   useEffect(() => {
-    localStorage.setItem("studyflow_personal_events", JSON.stringify(personalEvents));
+    localStorage.setItem("studyflow_personal_events_v2", JSON.stringify(personalEvents));
   }, [personalEvents]);
 
   const login = (name: string, field: string) => {

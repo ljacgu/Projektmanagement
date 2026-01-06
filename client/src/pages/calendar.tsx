@@ -188,6 +188,8 @@ export default function CalendarPage() {
                             const displayMonth = props.displayMonth;
 
                             if (!dayDate) return <div className="invisible" />;
+                            // Check if dayDate is valid date object
+                            if (!(dayDate instanceof Date) || isNaN(dayDate.getTime())) return <div className="invisible" />;
 
                             // Only render days that belong to the current month or are visible
                             if (displayMonth && dayDate.getMonth() !== displayMonth.getMonth() && props.hidden) {
