@@ -1,12 +1,11 @@
 import { Layout } from "@/components/Layout";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useStudy } from "@/lib/study-context";
 import { useState } from "react";
-import { format, parseISO, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isAfter } from "date-fns";
+import { format, parseISO, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isAfter, startOfMonth, endOfMonth, getDay, addMonths, subMonths } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar as CalendarIcon, Grid, Plus, Trash2, AlertTriangle, BookOpen, Sparkles } from "lucide-react";
+import { Clock, Calendar as CalendarIcon, Plus, Trash2, AlertTriangle, BookOpen, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddEventDialog } from "@/components/AddEventDialog";
 import {
@@ -17,7 +16,8 @@ import {
 
 export default function CalendarPage() {
   const { subjects, personalEvents, deletePersonalEvent } = useStudy();
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [view, setView] = useState<"month" | "2week" | "week" | "day">("month");
 
   const upcomingExams = subjects
@@ -45,7 +45,7 @@ export default function CalendarPage() {
     if (!day || !(day instanceof Date) || isNaN(day.getTime())) return [];
     return subjects.filter(s => {
       try {
-        return isSameDay(parseISO(s.examDate), day);
+        return s.examDate && isSameDay(parseISO(s.examDate), day);
       } catch (e) { return false; }
     });
   };
@@ -71,22 +71,174 @@ export default function CalendarPage() {
     const totalItems = exams.length + events.length;
     
     if (exams.length > 0) {
-      return { level: 4, color: "red", bgClass: "bg-red-500", borderClass: "ring-4 ring-red-400/60", label: "EXAM" };
+      return { level: 4, color: "red", bgClass: "bg-red-500", label: "EXAM" };
     }
     if (totalItems >= 3) {
-      return { level: 3, color: "orange", bgClass: "bg-orange-500", borderClass: "ring-2 ring-orange-400/50", label: "Busy" };
+      return { level: 3, color: "orange", bgClass: "bg-orange-500", label: "Busy" };
     }
     if (totalItems === 2) {
-      return { level: 2, color: "yellow", bgClass: "bg-amber-400", borderClass: "ring-2 ring-amber-400/40", label: "Moderate" };
+      return { level: 2, color: "yellow", bgClass: "bg-amber-400", label: "Moderate" };
     }
     if (totalItems === 1) {
-      return { level: 1, color: "green", bgClass: "bg-emerald-500", borderClass: "ring-1 ring-emerald-400/30", label: "Light" };
+      return { level: 1, color: "green", bgClass: "bg-emerald-500", label: "Light" };
     }
-    return { level: 0, color: "none", bgClass: "", borderClass: "", label: "Free" };
+    return { level: 0, color: "none", bgClass: "", label: "Free" };
+  };
+
+  const getMonthDays = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    return eachDayOfInterval({ start: startDate, end: endDate });
+  };
+
+  const renderMonthView = () => {
+    const days = getMonthDays();
+    const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="rounded-full">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <h2 className="text-2xl font-bold font-serif">{format(currentMonth, "MMMM yyyy")}</h2>
+          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="rounded-full">
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {weekDays.map(day => (
+            <div key={day} className="text-center text-sm font-bold text-muted-foreground uppercase tracking-wider py-2 bg-secondary/30 rounded-lg">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 flex-1">
+          {days.map((day) => {
+            const exams = getExamsForDate(day);
+            const events = getEventsForDate(day);
+            const hasExam = exams.length > 0;
+            const hasEvent = events.length > 0;
+            const isSelected = isSameDay(selectedDate, day);
+            const isToday = isSameDay(day, new Date());
+            const dayInfo = getDayInfo(day);
+            const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+            
+            return (
+              <Popover key={day.toISOString()}>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={() => setSelectedDate(day)}
+                    className={cn(
+                      "min-h-[80px] md:min-h-[100px] w-full text-left p-1.5 rounded-xl transition-all flex flex-col",
+                      isSelected ? "bg-primary/10 ring-2 ring-primary/40" : "hover:bg-secondary/60",
+                      isToday ? "bg-gradient-to-br from-primary/20 to-primary/5" : "",
+                      !isCurrentMonth && "opacity-30",
+                      dayInfo.level >= 3 && isCurrentMonth && "shadow-md"
+                    )}
+                    data-testid={`calendar-day-${format(day, 'yyyy-MM-dd')}`}
+                  >
+                    <div className="flex items-center justify-center mb-1">
+                      <span className={cn(
+                        "text-lg md:text-xl font-bold h-8 w-8 md:h-10 md:w-10 flex items-center justify-center rounded-full transition-all font-serif",
+                        isToday ? "bg-primary text-primary-foreground shadow-lg scale-110" : "",
+                        hasExam && !isToday ? "bg-red-500 text-white shadow-md" : "",
+                        !isToday && !hasExam && "hover:bg-secondary"
+                      )}>
+                        {day.getDate()}
+                      </span>
+                    </div>
+                    
+                    {hasExam && (
+                      <div className="flex items-center justify-center gap-1 w-full px-1 bg-red-500 text-white rounded-md py-0.5 shadow-sm mb-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        <span className="text-[10px] font-bold truncate">EXAM</span>
+                      </div>
+                    )}
+                    
+                    {!hasExam && dayInfo.level > 0 && (
+                      <div className={cn(
+                        "flex items-center justify-center gap-1 w-full px-1 rounded-md py-0.5 text-white shadow-sm mb-1",
+                        dayInfo.bgClass
+                      )}>
+                        <span className="text-[10px] font-semibold">
+                          {events.length} event{events.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex flex-wrap justify-center gap-0.5 w-full px-1 mt-auto">
+                      {events.slice(0, 3).map((e: any) => (
+                        <div 
+                          key={e.id} 
+                          className={cn("h-1.5 flex-1 max-w-[20px] rounded-full shadow-sm", e.color)} 
+                          title={e.title} 
+                        />
+                      ))}
+                      {events.length > 3 && (
+                        <span className="text-[9px] text-muted-foreground font-medium">+{events.length - 3}</span>
+                      )}
+                    </div>
+                  </button>
+                </PopoverTrigger>
+                {(hasExam || hasEvent) && (
+                  <PopoverContent className="w-80 p-4 shadow-xl border-2" align="center">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="font-bold text-lg font-serif">{format(day, "MMMM d, yyyy")}</h4>
+                        {dayInfo.level > 0 && (
+                          <Badge className={cn(dayInfo.bgClass, "text-white border-0")}>
+                            {dayInfo.label}
+                          </Badge>
+                        )}
+                      </div>
+                      {exams.map(exam => (
+                        <div key={exam.id} className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg" data-testid={`exam-popup-${exam.id}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            <span className="font-bold uppercase tracking-wide text-xs bg-white/20 px-2 py-0.5 rounded">Exam Day</span>
+                          </div>
+                          <div className="font-bold text-xl">{exam.name}</div>
+                          <div className="text-sm opacity-90 mt-2 flex items-center gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            Preparedness: {exam.studyScore}%
+                          </div>
+                        </div>
+                      ))}
+                      {events.map((event: any) => (
+                        <div key={event.id} className={cn("text-white p-4 rounded-xl shadow-md relative group", event.color)} data-testid={`event-popup-${event.id}`}>
+                          <div className="font-semibold text-lg">{event.title}</div>
+                          {event.description && <div className="text-sm opacity-90 mt-1">{event.description}</div>}
+                          <div className="text-xs opacity-75 capitalize mt-2 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {event.type}
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deletePersonalEvent(event.id); }}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:text-red-200 transition-all p-1 rounded-full hover:bg-white/20"
+                            data-testid={`button-delete-event-${event.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                )}
+              </Popover>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const renderAgendaView = () => {
-    const today = date || new Date();
+    const today = selectedDate || new Date();
     let start = today;
     let end = today;
 
@@ -134,8 +286,8 @@ export default function CalendarPage() {
                     <div 
                       key={item.id} 
                       className={cn(
-                        "p-3 rounded-lg text-sm font-medium flex justify-between items-center shadow-sm", 
-                        item.isExam ? "bg-red-500 text-white" : item.color + " text-white"
+                        "p-3 rounded-lg text-sm font-medium flex justify-between items-center shadow-sm text-white", 
+                        item.isExam ? "bg-red-500" : item.color
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -174,7 +326,7 @@ export default function CalendarPage() {
             <p className="text-muted-foreground">Manage your exams and personal schedule.</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-             <AddEventDialog defaultDate={date}>
+             <AddEventDialog defaultDate={selectedDate}>
                <Button className="gap-2 shadow-sm" data-testid="button-add-event">
                  <Plus className="h-4 w-4" /> Add Event
                </Button>
@@ -226,7 +378,7 @@ export default function CalendarPage() {
             <span>Legend:</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <div className="h-4 w-4 rounded-full bg-red-500 shadow-sm animate-pulse" />
+            <div className="h-4 w-4 rounded-full bg-red-500 shadow-sm" />
             <span className="font-medium text-red-700 dark:text-red-400">Exam Day</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -247,162 +399,7 @@ export default function CalendarPage() {
            <div className="col-span-12 md:col-span-8 lg:col-span-8 flex flex-col h-full min-h-[650px]">
               <Card className="flex-1 flex flex-col shadow-lg border-2">
                 <CardContent className="p-6 md:p-8 flex-1">
-                   {view === "month" ? (
-                     <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="w-full h-full flex flex-col"
-                        classNames={{
-                          months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full flex-1",
-                          month: "space-y-4 w-full flex flex-col flex-1",
-                          caption: "flex justify-center pt-1 relative items-center mb-6",
-                          caption_label: "text-2xl font-bold font-serif tracking-tight",
-                          nav: "space-x-2 flex items-center",
-                          nav_button: "h-10 w-10 bg-secondary hover:bg-primary hover:text-primary-foreground rounded-full p-0 opacity-70 hover:opacity-100 transition-all shadow-sm",
-                          table: "w-full border-collapse flex-1 h-full",
-                          head_row: "flex w-full mb-2",
-                          head_cell: "text-muted-foreground rounded-lg w-full font-bold text-sm uppercase tracking-wider py-3 bg-secondary/30",
-                          row: "flex w-full mt-1 flex-1",
-                          cell: "h-20 md:h-28 w-full text-center text-sm p-0.5 relative focus-within:relative focus-within:z-20",
-                          day: "h-full w-full p-0 font-normal aria-selected:opacity-100 transition-all flex flex-col items-center justify-start pt-1 gap-1 rounded-xl",
-                          day_selected: "bg-primary/10 text-primary ring-2 ring-primary/30",
-                          day_today: "bg-accent/50 text-accent-foreground font-bold",
-                          day_outside: "text-muted-foreground opacity-30",
-                          day_disabled: "text-muted-foreground opacity-30",
-                          day_hidden: "invisible",
-                        }}
-                        components={{
-                          Day: (props: any) => {
-                            const dayDate = props.date || props.day;
-                            const displayMonth = props.displayMonth;
-
-                            if (!dayDate) return <div className="invisible" />;
-                            if (!(dayDate instanceof Date) || isNaN(dayDate.getTime())) return <div className="invisible" />;
-
-                            if (displayMonth && dayDate.getMonth() !== displayMonth.getMonth() && props.hidden) {
-                                return <div className="invisible" />;
-                            }
-                            
-                            const exams = getExamsForDate(dayDate);
-                            const events = getEventsForDate(dayDate);
-                            const hasExam = exams.length > 0;
-                            const hasEvent = events.length > 0;
-                            const isSelected = date && isSameDay(date, dayDate);
-                            const isToday = isSameDay(dayDate, new Date());
-                            const dayInfo = getDayInfo(dayDate);
-                            const isCurrentMonth = displayMonth && dayDate.getMonth() === displayMonth.getMonth();
-                            
-                            return (
-                              <div className={cn(
-                                "h-20 md:h-28 w-full text-center text-sm p-1 relative transition-all rounded-xl",
-                                isSelected ? "bg-primary/10 ring-2 ring-primary/40" : "hover:bg-secondary/60",
-                                isToday ? "bg-gradient-to-br from-primary/20 to-primary/5" : "",
-                                !isCurrentMonth && "opacity-30",
-                                dayInfo.level >= 3 && isCurrentMonth && "shadow-md"
-                              )}>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <button 
-                                      className="w-full h-full flex flex-col items-center pt-1 gap-1 outline-none focus:ring-2 focus:ring-primary/50 rounded-lg"
-                                      onClick={() => setDate(dayDate)}
-                                      data-testid={`calendar-day-${format(dayDate, 'yyyy-MM-dd')}`}
-                                    >
-                                      <div className={cn(
-                                        "text-lg md:text-xl font-bold h-8 w-8 md:h-10 md:w-10 flex items-center justify-center rounded-full transition-all font-serif",
-                                        isToday ? "bg-primary text-primary-foreground shadow-lg scale-110" : "",
-                                        hasExam && !isToday ? "bg-red-500 text-white shadow-md animate-pulse" : "",
-                                        !isToday && !hasExam && "hover:bg-secondary"
-                                      )}>
-                                        {dayDate.getDate()}
-                                      </div>
-                                      
-                                      {hasExam && (
-                                        <div className="flex items-center justify-center gap-1 w-full px-1 bg-red-500 text-white rounded-md py-0.5 shadow-sm">
-                                          <AlertTriangle className="h-3 w-3" />
-                                          <span className="text-[10px] font-bold truncate">EXAM</span>
-                                        </div>
-                                      )}
-                                      
-                                      {!hasExam && dayInfo.level > 0 && (
-                                        <div className={cn(
-                                          "flex items-center justify-center gap-1 w-full px-2 rounded-md py-0.5",
-                                          dayInfo.bgClass,
-                                          "text-white shadow-sm"
-                                        )}>
-                                          <span className="text-[10px] font-semibold">
-                                            {events.length} event{events.length > 1 ? 's' : ''}
-                                          </span>
-                                        </div>
-                                      )}
-                                      
-                                      <div className="flex flex-wrap justify-center gap-0.5 w-full px-1 mt-auto">
-                                        {events.slice(0, 3).map((e: any) => (
-                                          <div 
-                                            key={e.id} 
-                                            className={cn("h-1.5 flex-1 max-w-[20px] rounded-full shadow-sm", e.color)} 
-                                            title={e.title} 
-                                          />
-                                        ))}
-                                        {events.length > 3 && (
-                                          <span className="text-[9px] text-muted-foreground font-medium">+{events.length - 3}</span>
-                                        )}
-                                      </div>
-                                    </button>
-                                  </PopoverTrigger>
-                                  {(hasExam || hasEvent) && (
-                                    <PopoverContent className="w-80 p-4 shadow-xl border-2" align="center">
-                                      <div className="space-y-3">
-                                        <div className="flex items-center justify-between border-b pb-2">
-                                          <h4 className="font-bold text-lg font-serif">{format(dayDate, "MMMM d, yyyy")}</h4>
-                                          {dayInfo.level > 0 && (
-                                            <Badge className={cn(dayInfo.bgClass, "text-white border-0")}>
-                                              {dayInfo.label}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        {exams.map(exam => (
-                                          <div key={exam.id} className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg" data-testid={`exam-popup-${exam.id}`}>
-                                            <div className="flex items-center gap-2 mb-2">
-                                              <AlertTriangle className="h-5 w-5 animate-pulse" />
-                                              <span className="font-bold uppercase tracking-wide text-xs bg-white/20 px-2 py-0.5 rounded">Exam Day</span>
-                                            </div>
-                                            <div className="font-bold text-xl">{exam.name}</div>
-                                            <div className="text-sm opacity-90 mt-2 flex items-center gap-2">
-                                              <BookOpen className="h-4 w-4" />
-                                              Preparedness: {exam.studyScore}%
-                                            </div>
-                                          </div>
-                                        ))}
-                                        {events.map((event: any) => (
-                                          <div key={event.id} className={cn("text-white p-4 rounded-xl shadow-md relative group", event.color)} data-testid={`event-popup-${event.id}`}>
-                                            <div className="font-semibold text-lg">{event.title}</div>
-                                            {event.description && <div className="text-sm opacity-90 mt-1">{event.description}</div>}
-                                            <div className="text-xs opacity-75 capitalize mt-2 flex items-center gap-1">
-                                              <Clock className="h-3 w-3" />
-                                              {event.type}
-                                            </div>
-                                            <button 
-                                              onClick={(e) => { e.stopPropagation(); deletePersonalEvent(event.id); }}
-                                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:text-red-200 transition-all p-1 rounded-full hover:bg-white/20"
-                                              data-testid={`button-delete-event-${event.id}`}
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </button>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </PopoverContent>
-                                  )}
-                                </Popover>
-                              </div>
-                            );
-                          }
-                        }}
-                      />
-                   ) : (
-                     renderAgendaView()
-                   )}
+                   {view === "month" ? renderMonthView() : renderAgendaView()}
                 </CardContent>
               </Card>
            </div>
@@ -411,7 +408,7 @@ export default function CalendarPage() {
               <Card className="border-l-4 border-l-primary shadow-lg">
                  <CardHeader>
                     <CardTitle className="font-serif text-xl">
-                       {date ? format(date, "MMMM d, yyyy") : "Select a date"}
+                       {format(selectedDate, "MMMM d, yyyy")}
                     </CardTitle>
                     <CardDescription>
                        Daily Overview
@@ -419,8 +416,8 @@ export default function CalendarPage() {
                  </CardHeader>
                  <CardContent>
                     <div className="space-y-4">
-                       {date && getAllForDate(date).length > 0 ? (
-                          getAllForDate(date).map((item: any) => (
+                       {getAllForDate(selectedDate).length > 0 ? (
+                          getAllForDate(selectedDate).map((item: any) => (
                              <div key={item.id} className={cn(
                                "p-4 rounded-xl shadow-md text-white relative group transition-all hover:scale-[1.02] hover:shadow-lg", 
                                item.isExam ? "bg-gradient-to-r from-red-500 to-red-600" : item.color
@@ -428,7 +425,7 @@ export default function CalendarPage() {
                                 {item.isExam ? (
                                   <>
                                     <div className="flex items-center gap-2 mb-2">
-                                      <AlertTriangle className="h-5 w-5 animate-pulse" />
+                                      <AlertTriangle className="h-5 w-5" />
                                       <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded">Exam Day</span>
                                     </div>
                                     <h3 className="font-bold text-xl">{item.name}</h3>
@@ -457,7 +454,7 @@ export default function CalendarPage() {
                              <p className="font-medium">Free day!</p>
                              <p className="text-sm mt-1">Nothing scheduled</p>
                              <div className="mt-4">
-                               <AddEventDialog defaultDate={date}>
+                               <AddEventDialog defaultDate={selectedDate}>
                                  <Button variant="outline" size="sm" data-testid="button-add-event-empty">
                                    <Plus className="mr-2 h-3 w-3" /> Add Event
                                  </Button>
@@ -477,16 +474,16 @@ export default function CalendarPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="space-y-0">
-                    {upcomingExams.map((subject, index) => (
+                  <div className="space-y-3">
+                    {upcomingExams.map((subject) => (
                       <div 
                         key={subject.id} 
-                        className={cn(
-                          "relative p-4 bg-card border-2 rounded-xl shadow-sm transition-all hover:translate-x-1 hover:shadow-md cursor-pointer border-l-4 border-l-red-500", 
-                          index !== 0 && "-mt-2"
-                        )}
-                        style={{ zIndex: upcomingExams.length - index }}
-                        onClick={() => setDate(parseISO(subject.examDate))}
+                        className="p-4 bg-card border-2 rounded-xl shadow-sm transition-all hover:translate-x-1 hover:shadow-md cursor-pointer border-l-4 border-l-red-500"
+                        onClick={() => {
+                          const examDate = parseISO(subject.examDate);
+                          setSelectedDate(examDate);
+                          setCurrentMonth(examDate);
+                        }}
                         data-testid={`upcoming-exam-${subject.id}`}
                       >
                         <div className="flex justify-between items-start">
