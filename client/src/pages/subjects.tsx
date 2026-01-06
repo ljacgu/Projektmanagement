@@ -67,7 +67,7 @@ export default function SubjectsPage() {
           {filteredSubjects.map((subject) => {
              const subjectProblems = problems.filter(p => p.subjectId === subject.id && p.status === "active");
              const problemCount = subjectProblems.length;
-             const fileCount = subject.files ? subject.files.length : 0;
+             const fileCount = 0; // Files will be loaded separately
              const colorClass = getSubjectColor(subject.studyScore);
              
              // Safety checks for new fields
@@ -80,7 +80,7 @@ export default function SubjectsPage() {
                  <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                        <Badge variant="secondary" className="font-mono text-xs">
-                          {subject.grade ? `Grade: ${subject.grade}` : `Score: ${subject.studyScore}`}
+                          {subject.grade ? `Grade: ${(subject.grade / 10).toFixed(1)}` : `Score: ${subject.studyScore}`}
                        </Badge>
                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -90,17 +90,17 @@ export default function SubjectsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                             <AddProblemDialog subjectId={subject.id} subjectName={subject.name}>
+                             <AddProblemDialog subjectId={Number(subject.id)} subjectName={subject.name}>
                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   Report Problem
                                 </DropdownMenuItem>
                              </AddProblemDialog>
-                             <SubjectResourcesDialog subjectId={subject.id} subjectName={subject.name}>
+                             <SubjectResourcesDialog subjectId={Number(subject.id)} subjectName={subject.name}>
                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   Manage Files
                                 </DropdownMenuItem>
                              </SubjectResourcesDialog>
-                             <SubjectResultDialog subjectId={subject.id} subjectName={subject.name}>
+                             <SubjectResultDialog subjectId={Number(subject.id)} subjectName={subject.name}>
                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   Set Grade / Upload Result
                                 </DropdownMenuItem>
@@ -162,12 +162,12 @@ export default function SubjectsPage() {
                     )}
                  </CardContent>
                  <CardFooter className="bg-secondary/20 p-2 grid grid-cols-2 gap-1">
-                    <AddProblemDialog subjectId={subject.id} subjectName={subject.name}>
+                    <AddProblemDialog subjectId={Number(subject.id)} subjectName={subject.name}>
                         <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs">
                            <Plus className="h-3.5 w-3.5" /> Problem
                         </Button>
                     </AddProblemDialog>
-                    <SubjectResourcesDialog subjectId={subject.id} subjectName={subject.name}>
+                    <SubjectResourcesDialog subjectId={Number(subject.id)} subjectName={subject.name}>
                         <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs">
                            <Paperclip className="h-3.5 w-3.5" /> Files ({fileCount})
                         </Button>

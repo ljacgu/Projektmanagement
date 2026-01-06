@@ -17,7 +17,7 @@ import { AlertCircle, Plus } from "lucide-react";
 
 interface AddProblemDialogProps {
   children?: React.ReactNode;
-  subjectId: string;
+  subjectId: number;
   subjectName: string;
 }
 
@@ -33,6 +33,7 @@ export function AddProblemDialog({ children, subjectId, subjectName }: AddProble
     addProblem({
       subjectId,
       description,
+      createdAt: new Date().toISOString().split("T")[0],
     });
 
     setOpen(false);

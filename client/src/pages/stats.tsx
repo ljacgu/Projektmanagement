@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 export default function StatsPage() {
   const { logs, subjects, problems } = useStudy();
 
-  const passedExams = subjects.filter(s => s.grade !== undefined && s.grade <= 4.4);
-  const failedExams = subjects.filter(s => s.grade !== undefined && s.grade > 4.4);
+  const passedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade <= 44);
+  const failedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade > 44);
   
   const averageGrade = passedExams.length > 0 
     ? passedExams.reduce((acc, s) => acc + (s.grade || 0), 0) / passedExams.length 

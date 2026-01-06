@@ -18,13 +18,12 @@ import { cn } from "@/lib/utils";
 
 interface SubjectResourcesDialogProps {
   children?: React.ReactNode;
-  subjectId: string;
+  subjectId: number;
   subjectName: string;
 }
 
 export function SubjectResourcesDialog({ children, subjectId, subjectName }: SubjectResourcesDialogProps) {
-  const { subjects, addFile } = useStudy();
-  const subject = subjects.find(s => s.id === subjectId);
+  const { addFile } = useStudy();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,7 +46,8 @@ export function SubjectResourcesDialog({ children, subjectId, subjectName }: Sub
           name: file.name,
           type,
           url: "#",
-          size: size === "0.0 MB" ? (file.size / 1024).toFixed(0) + " KB" : size
+          size: size === "0.0 MB" ? (file.size / 1024).toFixed(0) + " KB" : size,
+          uploadedAt: new Date().toISOString().split("T")[0],
         });
         
         setIsUploading(false);
@@ -82,33 +82,11 @@ export function SubjectResourcesDialog({ children, subjectId, subjectName }: Sub
         </DialogHeader>
         
         <div className="py-4">
-          <ScrollArea className="h-[300px] pr-4 border rounded-md bg-secondary/10 p-4">
-            {subject?.files && subject.files.length > 0 ? (
-              <div className="space-y-3">
-                {subject.files.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 bg-card border rounded-lg hover:shadow-sm transition-shadow group">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-secondary rounded-lg flex items-center justify-center">
-                        {getFileIcon(file.type)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm truncate max-w-[200px]" title={file.name}>{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{file.size} • {file.uploadedAt}</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                <File className="h-10 w-10 opacity-20" />
-                <p>No files uploaded yet.</p>
-              </div>
-            )}
-          </ScrollArea>
+          <div className="h-[300px] pr-4 border rounded-md bg-secondary/10 p-4 flex flex-col items-center justify-center text-muted-foreground space-y-2">
+            <File className="h-10 w-10 opacity-20" />
+            <p className="text-sm">File storage coming soon</p>
+            <p className="text-xs">You can upload files which will be stored in the database</p>
+          </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
