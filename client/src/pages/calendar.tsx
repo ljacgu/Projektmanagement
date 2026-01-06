@@ -41,11 +41,6 @@ export default function CalendarPage() {
     return [...exams, ...events];
   };
 
-  const getSubjectColor = (score: number) => {
-    // Red for exams regardless of score on calendar now, per request "make that date red"
-    return "bg-destructive text-destructive-foreground";
-  };
-
   const renderAgendaView = () => {
     const today = date || new Date();
     let start = today;
@@ -186,68 +181,79 @@ export default function CalendarPage() {
                           day_disabled: "text-muted-foreground opacity-50",
                           day_hidden: "invisible",
                         }}
-                        modifiers={{
-                          exam: examDays
-                        }}
-                        modifiersStyles={{
-                          // Removed style here to handle in DayContent for more control
-                        }}
+                        // We use Custom Day component instead of modifiers to avoid hydration issues with nested buttons
                         components={{
-                          DayContent: (props: any) => {
-                            const exams = getExamsForDate(props.date);
-                            const events = getEventsForDate(props.date);
+                          Day: (props: any) => {
+                            const { date: dayDate, displayMonth } = props;
+                            // Only render days that belong to the current month or are visible
+                            if (dayDate.getMonth() !== displayMonth.getMonth() && props.hidden) {
+                                return <div className="invisible" />;
+                            }
+                            
+                            const exams = getExamsForDate(dayDate);
+                            const events = getEventsForDate(dayDate);
                             const hasExam = exams.length > 0;
                             const hasEvent = events.length > 0;
+                            const isSelected = date && isSameDay(date, dayDate);
+                            const isToday = isSameDay(dayDate, new Date());
                             
-                            // Color logic: Red if exam, otherwise event color indicator
                             return (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <div className={cn(
-                                    "w-full h-full flex flex-col items-center cursor-pointer",
-                                    hasExam ? "bg-destructive/10" : ""
-                                  )}>
-                                    <span className="text-sm">{props.date.getDate()}</span>
-                                    
-                                    <div className="flex flex-wrap justify-center gap-1 w-full px-1 mt-1">
-                                      {hasExam && (
-                                        <div className="h-2 w-full mx-2 rounded-full bg-destructive animate-pulse" title="Exam Day" />
-                                      )}
+                              <div className={cn(
+                                "h-16 md:h-24 w-full text-center text-sm p-0 relative border-b border-r border-border/20",
+                                isSelected ? "bg-primary/5 text-primary" : "hover:bg-secondary/50",
+                                isToday ? "bg-accent/30" : ""
+                              )}>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button 
+                                      className="w-full h-full flex flex-col items-center pt-2 gap-1 outline-none focus:bg-secondary/50"
+                                      onClick={() => setDate(dayDate)}
+                                    >
+                                      <span className={cn(
+                                        "text-sm font-medium h-7 w-7 flex items-center justify-center rounded-full",
+                                        isToday ? "bg-primary text-primary-foreground" : ""
+                                      )}>{dayDate.getDate()}</span>
                                       
-                                      {events.slice(0, 3).map(e => (
-                                        <div key={e.id} className={cn("h-1.5 w-1.5 rounded-full", e.color)} title={e.title} />
-                                      ))}
-                                      {events.length > 3 && <span className="text-[10px] leading-none text-muted-foreground">+</span>}
-                                    </div>
-                                  </div>
-                                </PopoverTrigger>
-                                {(hasExam || hasEvent) && (
-                                  <PopoverContent className="w-64 p-3">
-                                    <div className="space-y-2">
-                                      <h4 className="font-semibold text-sm border-b pb-1 mb-2">{format(props.date, "MMMM d, yyyy")}</h4>
-                                      {exams.map(exam => (
-                                        <div key={exam.id} className="bg-destructive text-destructive-foreground p-2 rounded text-sm">
-                                          <div className="font-bold">EXAM: {exam.name}</div>
-                                          <div className="text-xs opacity-90">Score: {exam.studyScore}</div>
-                                        </div>
-                                      ))}
-                                      {events.map(event => (
-                                        <div key={event.id} className={cn("text-white p-2 rounded text-sm relative group", event.color)}>
-                                          <div className="font-medium">{event.title}</div>
-                                          {event.description && <div className="text-xs opacity-90">{event.description}</div>}
-                                          <div className="text-xs opacity-75 capitalize mt-1">{event.type}</div>
-                                          <button 
-                                            onClick={(e) => { e.stopPropagation(); deletePersonalEvent(event.id); }}
-                                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 hover:text-red-200"
-                                          >
-                                            <Trash2 className="h-3 w-3" />
-                                          </button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </PopoverContent>
-                                )}
-                              </Popover>
+                                      <div className="flex flex-wrap justify-center gap-1 w-full px-1 mt-1">
+                                        {hasExam && (
+                                          <div className="h-2 w-full mx-2 rounded-full bg-destructive animate-pulse" title="Exam Day" />
+                                        )}
+                                        
+                                        {events.slice(0, 3).map((e: any) => (
+                                          <div key={e.id} className={cn("h-1.5 w-1.5 rounded-full", e.color)} title={e.title} />
+                                        ))}
+                                        {events.length > 3 && <span className="text-[10px] leading-none text-muted-foreground">+</span>}
+                                      </div>
+                                    </button>
+                                  </PopoverTrigger>
+                                  {(hasExam || hasEvent) && (
+                                    <PopoverContent className="w-64 p-3" align="center">
+                                      <div className="space-y-2">
+                                        <h4 className="font-semibold text-sm border-b pb-1 mb-2">{format(dayDate, "MMMM d, yyyy")}</h4>
+                                        {exams.map(exam => (
+                                          <div key={exam.id} className="bg-destructive text-destructive-foreground p-2 rounded text-sm">
+                                            <div className="font-bold">EXAM: {exam.name}</div>
+                                            <div className="text-xs opacity-90">Score: {exam.studyScore}</div>
+                                          </div>
+                                        ))}
+                                        {events.map((event: any) => (
+                                          <div key={event.id} className={cn("text-white p-2 rounded text-sm relative group", event.color)}>
+                                            <div className="font-medium">{event.title}</div>
+                                            {event.description && <div className="text-xs opacity-90">{event.description}</div>}
+                                            <div className="text-xs opacity-75 capitalize mt-1">{event.type}</div>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); deletePersonalEvent(event.id); }}
+                                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 hover:text-red-200"
+                                            >
+                                              <Trash2 className="h-3 w-3" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  )}
+                                </Popover>
+                              </div>
                             );
                           }
                         }}
