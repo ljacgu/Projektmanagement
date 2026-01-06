@@ -20,6 +20,7 @@ export interface Subject {
   files: StudyFile[]; // New: Attached files
   grade?: number; // Optional: Grade for past exams (German scale: 1.0 - 5.0)
   examResultFile?: StudyFile; // File for the exam result
+  notes?: string; // New: Exam notes
 }
 
 export interface Problem {
