@@ -52,7 +52,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "1",
     name: "Advanced Calculus",
-    examDate: "2024-06-15",
+    examDate: "2026-06-15",
     color: "bg-blue-500",
     studyScore: 0,
     targetHours: 50,
@@ -62,7 +62,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "2",
     name: "Organic Chemistry",
-    examDate: "2024-05-20",
+    examDate: "2026-05-20",
     color: "bg-emerald-500",
     studyScore: 0,
     targetHours: 40,
@@ -72,7 +72,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "3",
     name: "World History",
-    examDate: "2024-06-01",
+    examDate: "2026-06-01",
     color: "bg-amber-500",
     studyScore: 0,
     targetHours: 30,
@@ -82,7 +82,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "4",
     name: "Computer Science 101",
-    examDate: "2024-05-10",
+    examDate: "2026-05-10",
     color: "bg-purple-500",
     studyScore: 0,
     targetHours: 60,
@@ -92,7 +92,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "5",
     name: "Physics I",
-    examDate: "2024-01-15",
+    examDate: "2026-01-15",
     color: "bg-indigo-500",
     studyScore: 0,
     targetHours: 40,
@@ -102,7 +102,7 @@ export const mockSubjects: Subject[] = [
   {
     id: "6",
     name: "English Literature",
-    examDate: "2023-12-10",
+    examDate: "2026-02-10",
     color: "bg-rose-500",
     studyScore: 0,
     targetHours: 20,
