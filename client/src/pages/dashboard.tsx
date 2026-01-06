@@ -47,8 +47,13 @@ export default function Dashboard() {
   const today = new Date();
 
   const getDaysLeft = (dateStr: string) => {
-    const days = differenceInDays(parseISO(dateStr), today);
-    return days;
+    try {
+      if (!dateStr) return 0;
+      const days = differenceInDays(parseISO(dateStr), today);
+      return isNaN(days) ? 0 : days;
+    } catch {
+      return 0;
+    }
   };
 
   const getSubjectColor = (score: number) => {
