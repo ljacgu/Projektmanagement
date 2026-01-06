@@ -15,7 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
 import { useStudy } from "@/lib/study-context";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const eventSchema = z.object({
   title: z.string().min(2, "Title is too short"),
@@ -76,17 +75,15 @@ export function AddEventDialog({ children, defaultDate }: { children: React.Reac
           
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="appointment">
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="class">Class</SelectItem>
-                <SelectItem value="appointment">Appointment</SelectItem>
-                <SelectItem value="training">Training</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              {...register("type")}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="class">Class</option>
+              <option value="appointment">Appointment</option>
+              <option value="training">Training</option>
+              <option value="other">Other</option>
+            </select>
           </div>
 
           <div className="space-y-2">
