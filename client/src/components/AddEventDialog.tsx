@@ -1,0 +1,110 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useState } from "react";
+import { useStudy } from "@/lib/study-context";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const eventSchema = z.object({
+  title: z.string().min(2, "Title is too short"),
+  description: z.string().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+  type: z.enum(["class", "appointment", "training", "other"]),
+});
+
+type EventFormValues = z.infer<typeof eventSchema>;
+
+export function AddEventDialog({ children, defaultDate }: { children: React.ReactNode; defaultDate?: Date }) {
+  const [open, setOpen] = useState(false);
+  const { addPersonalEvent } = useStudy();
+  
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<EventFormValues>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      type: "appointment",
+      date: defaultDate ? defaultDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
+    }
+  });
+
+  const onSubmit = (data: EventFormValues) => {
+    let color = "bg-slate-500";
+    switch(data.type) {
+      case "class": color = "bg-blue-500"; break;
+      case "appointment": color = "bg-purple-500"; break;
+      case "training": color = "bg-emerald-500"; break;
+      case "other": color = "bg-gray-500"; break;
+    }
+
+    addPersonalEvent({
+      ...data,
+      color
+    });
+    setOpen(false);
+    reset();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add Personal Event</DialogTitle>
+          <DialogDescription>
+            Schedule a training, appointment, or class.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Event Title</Label>
+            <Input id="title" {...register("title")} placeholder="e.g. Dentist Appointment" />
+            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select onValueChange={(val) => setValue("type", val as any)} defaultValue="appointment">
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="class">Class</SelectItem>
+                <SelectItem value="appointment">Appointment</SelectItem>
+                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" type="date" {...register("date")} />
+            {errors.date && <p className="text-sm text-destructive">{errors.date.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Input id="description" {...register("description")} placeholder="Details..." />
+          </div>
+
+          <DialogFooter>
+            <Button type="submit">Add Event</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
