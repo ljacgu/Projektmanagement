@@ -210,8 +210,8 @@ export default function Dashboard() {
 
           {/* Sidebar - Problem Tracker */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            <Card className="h-full border-l-4 border-l-primary shadow-sm">
-              <CardHeader>
+            <Card className="border-l-4 border-l-primary shadow-sm min-h-[600px] lg:min-h-0 lg:h-[calc(100vh-200px)] flex flex-col">
+              <CardHeader className="flex-shrink-0">
                 <CardTitle className="flex items-center gap-2 font-serif">
                   <AlertCircle className="h-5 w-5 text-primary" />
                   Problem Tracker
@@ -220,8 +220,8 @@ export default function Dashboard() {
                    Focus areas that need your attention.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="px-0">
-                <ScrollArea className="h-[400px] px-6">
+              <CardContent className="px-0 flex-1 overflow-hidden">
+                <ScrollArea className="h-full px-6">
                   <div className="space-y-4">
                     {activeProblems.length === 0 && (
                       <div className="text-center p-4 text-muted-foreground text-sm">
