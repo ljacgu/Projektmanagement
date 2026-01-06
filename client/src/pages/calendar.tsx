@@ -22,17 +22,43 @@ export default function CalendarPage() {
 
   // Filter only upcoming exams for the stack
   const upcomingExams = subjects
-    .filter(s => s.examDate && isAfter(parseISO(s.examDate), new Date(new Date().setDate(new Date().getDate() - 1))))
-    .sort((a, b) => parseISO(a.examDate).getTime() - parseISO(b.examDate).getTime());
+    .filter(s => {
+      try {
+        if (!s.examDate) return false;
+        const examDate = parseISO(s.examDate);
+        if (isNaN(examDate.getTime())) return false;
+        // Check if exam is in the future
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return isAfter(examDate, yesterday);
+      } catch (e) {
+        return false;
+      }
+    })
+    .sort((a, b) => {
+      try {
+        return parseISO(a.examDate).getTime() - parseISO(b.examDate).getTime();
+      } catch (e) {
+        return 0;
+      }
+    });
 
-  const examDays = subjects.map(s => parseISO(s.examDate));
-  
   const getExamsForDate = (day: Date) => {
-    return subjects.filter(s => isSameDay(parseISO(s.examDate), day));
+    if (!day || !(day instanceof Date) || isNaN(day.getTime())) return [];
+    return subjects.filter(s => {
+      try {
+        return isSameDay(parseISO(s.examDate), day);
+      } catch (e) { return false; }
+    });
   };
 
   const getEventsForDate = (day: Date) => {
-    return personalEvents.filter(e => isSameDay(parseISO(e.date), day));
+    if (!day || !(day instanceof Date) || isNaN(day.getTime())) return [];
+    return personalEvents.filter(e => {
+      try {
+        return isSameDay(parseISO(e.date), day);
+      } catch (e) { return false; }
+    });
   };
 
   const getAllForDate = (day: Date) => {
