@@ -18,7 +18,8 @@ export interface Subject {
   targetHours: number; // New: Target study hours
   studiedMinutes: number; // New: Track actual studied time
   files: StudyFile[]; // New: Attached files
-  grade?: number; // Optional: Grade for past exams (e.g., 1-100 or 1-6 scale)
+  grade?: number; // Optional: Grade for past exams (German scale: 1.0 - 5.0)
+  examResultFile?: StudyFile; // File for the exam result
 }
 
 export interface Problem {
@@ -36,6 +37,15 @@ export interface StudyLog {
   description: string; // What was studied
   date: string;
   solvedProblemId?: string; // If this log solved a problem
+}
+
+export interface PersonalEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // ISO Date
+  type: "class" | "appointment" | "training" | "other";
+  color: string;
 }
 
 export const mockSubjects: Subject[] = [
@@ -113,8 +123,8 @@ export const mockSubjects: Subject[] = [
     studyScore: 100,
     targetHours: 40,
     studiedMinutes: 2400,
-    files: [],
-    grade: 92 // Past exam with grade
+    files: []
+    // Removed default grade
   },
   {
     id: "6",
@@ -124,8 +134,8 @@ export const mockSubjects: Subject[] = [
     studyScore: 100,
     targetHours: 20,
     studiedMinutes: 1200,
-    files: [],
-    grade: 88 // Past exam with grade
+    files: []
+    // Removed default grade
   }
 ];
 

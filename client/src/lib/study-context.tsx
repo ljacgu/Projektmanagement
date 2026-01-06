@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { mockSubjects, mockProblems, mockLogs, Subject, Problem, StudyLog, StudyFile } from "./mockData";
+import { mockSubjects, mockProblems, mockLogs, Subject, Problem, StudyLog, StudyFile, PersonalEvent } from "./mockData";
 
 export interface User {
   name: string;
@@ -12,14 +12,18 @@ interface StudyContextType {
   subjects: Subject[];
   problems: Problem[];
   logs: StudyLog[];
+  personalEvents: PersonalEvent[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   addSubject: (subject: Omit<Subject, "id" | "studyScore" | "color" | "studiedMinutes" | "files">) => void;
+  updateSubject: (id: string, updates: Partial<Subject>) => void;
   deleteSubject: (id: string) => void;
   addProblem: (problem: Omit<Problem, "id" | "status" | "createdAt">) => void;
   addLog: (log: Omit<StudyLog, "id">) => void;
   solveProblem: (id: string) => void;
   addFile: (subjectId: string, file: Omit<StudyFile, "id" | "uploadedAt">) => void;
+  addPersonalEvent: (event: Omit<PersonalEvent, "id">) => void;
+  deletePersonalEvent: (id: string) => void;
 }
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
@@ -46,6 +50,11 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : mockLogs;
   });
 
+  const [personalEvents, setPersonalEvents] = useState<PersonalEvent[]>(() => {
+    const saved = localStorage.getItem("studyflow_personal_events");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
 
   // Persist state changes
@@ -65,6 +74,10 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("studyflow_logs", JSON.stringify(logs));
   }, [logs]);
 
+  useEffect(() => {
+    localStorage.setItem("studyflow_personal_events", JSON.stringify(personalEvents));
+  }, [personalEvents]);
+
   const login = (name: string, field: string) => {
     setUser({ name, field });
   };
@@ -79,6 +92,10 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       files: []
     };
     setSubjects([...subjects, subject]);
+  };
+
+  const updateSubject = (id: string, updates: Partial<Subject>) => {
+    setSubjects(subjects.map(s => s.id === id ? { ...s, ...updates } : s));
   };
 
   const deleteSubject = (id: string) => {
@@ -144,6 +161,18 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const addPersonalEvent = (newEvent: Omit<PersonalEvent, "id">) => {
+    const event: PersonalEvent = {
+      ...newEvent,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    setPersonalEvents([...personalEvents, event]);
+  };
+
+  const deletePersonalEvent = (id: string) => {
+    setPersonalEvents(personalEvents.filter(e => e.id !== id));
+  };
+
   return (
     <StudyContext.Provider value={{ 
       user, 
@@ -151,14 +180,18 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       subjects, 
       problems, 
       logs, 
+      personalEvents,
       searchQuery,
       setSearchQuery,
       addSubject, 
+      updateSubject,
       deleteSubject, 
       addProblem, 
       addLog, 
       solveProblem,
-      addFile
+      addFile,
+      addPersonalEvent,
+      deletePersonalEvent
     }}>
       {children}
     </StudyContext.Provider>

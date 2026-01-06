@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useStudy } from "@/lib/study-context";
+import { SubjectResultDialog } from "@/components/SubjectResultDialog";
 import { AddSubjectDialog } from "@/components/AddSubjectDialog";
 import { AddProblemDialog } from "@/components/AddProblemDialog";
 import { SubjectResourcesDialog } from "@/components/SubjectResourcesDialog";
@@ -79,7 +80,7 @@ export default function SubjectsPage() {
                  <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                        <Badge variant="secondary" className="font-mono text-xs">
-                          Score: {subject.studyScore}
+                          {subject.grade ? `Grade: ${subject.grade}` : `Score: ${subject.studyScore}`}
                        </Badge>
                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -99,6 +100,11 @@ export default function SubjectsPage() {
                                   Manage Files
                                 </DropdownMenuItem>
                              </SubjectResourcesDialog>
+                             <SubjectResultDialog subjectId={subject.id} subjectName={subject.name}>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  Set Grade / Upload Result
+                                </DropdownMenuItem>
+                             </SubjectResultDialog>
                              <DropdownMenuItem className="text-destructive" onClick={() => deleteSubject(subject.id)}>
                                 Delete Subject
                              </DropdownMenuItem>

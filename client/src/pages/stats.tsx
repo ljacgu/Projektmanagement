@@ -2,16 +2,18 @@ import { Layout } from "@/components/Layout";
 import { useStudy } from "@/lib/study-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, BookOpen, CheckCircle2, GraduationCap, Award } from "lucide-react";
+import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle } from "lucide-react";
 import { isBefore, parseISO } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 export default function StatsPage() {
   const { logs, subjects, problems } = useStudy();
 
-  const passedExams = subjects.filter(s => s.grade !== undefined || (s.examDate && isBefore(parseISO(s.examDate), new Date()) && s.studyScore > 50));
+  const passedExams = subjects.filter(s => s.grade !== undefined && s.grade <= 4.4);
+  const failedExams = subjects.filter(s => s.grade !== undefined && s.grade > 4.4);
   
   const averageGrade = passedExams.length > 0 
-    ? passedExams.reduce((acc, s) => acc + (s.grade || s.studyScore), 0) / passedExams.length 
+    ? passedExams.reduce((acc, s) => acc + (s.grade || 0), 0) / passedExams.length 
     : 0;
 
   return (
@@ -30,12 +32,12 @@ export default function StatsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Average Grade</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Average Grade (Passed)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold font-serif text-primary">{averageGrade.toFixed(1)}</span>
-                    <span className="text-sm text-muted-foreground">/ 100</span>
+                    <span className="text-4xl font-bold font-serif text-primary">{averageGrade.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">/ 1.0</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">Based on {passedExams.length} passed subjects</p>
                 </CardContent>
@@ -115,34 +117,68 @@ export default function StatsPage() {
 
           {/* Sidebar - Old Exams */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            <Card className="h-full">
+            <Card className="h-full border-l-4 border-l-primary">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-primary" />
-                  Academic History
+                  Passed Exams
                 </CardTitle>
-                <CardDescription>Past exams and grades</CardDescription>
+                <CardDescription>Grades 1.0 - 4.4</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[600px] pr-4">
+                <ScrollArea className="h-[300px] pr-4">
                   <div className="space-y-4">
                     {passedExams.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground text-sm">
-                        No past exams recorded yet.
+                        No passed exams recorded yet.
                       </div>
                     ) : (
                       passedExams.map((subject) => (
-                        <div key={subject.id} className="p-4 rounded-lg border bg-card/50 hover:bg-card transition-all">
+                        <div key={subject.id} className="p-4 rounded-lg border bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50 transition-all">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-semibold">{subject.name}</h4>
-                            <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">
+                            <div className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold border border-emerald-200">
                               <Award className="h-3 w-3" />
-                              {subject.grade || subject.studyScore}
+                              {subject.grade?.toFixed(1)}
                             </div>
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>Exam: {subject.examDate}</span>
-                            <span>{subject.grade ? "Final Grade" : "Predicted"}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            <Card className="h-full border-l-4 border-l-destructive">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-destructive" />
+                  Failed Exams
+                </CardTitle>
+                <CardDescription>Grades &gt; 4.4</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[200px] pr-4">
+                  <div className="space-y-4">
+                    {failedExams.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        No failed exams. Excellent!
+                      </div>
+                    ) : (
+                      failedExams.map((subject) => (
+                        <div key={subject.id} className="p-4 rounded-lg border bg-destructive/5 border-destructive/20 hover:bg-destructive/10 transition-all">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold">{subject.name}</h4>
+                            <div className="flex items-center gap-1 bg-destructive/10 text-destructive px-2 py-1 rounded text-xs font-bold border border-destructive/20">
+                              {subject.grade?.toFixed(1)}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Exam: {subject.examDate}</span>
                           </div>
                         </div>
                       ))
