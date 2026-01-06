@@ -26,9 +26,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { differenceInDays, parseISO, isAfter } from "date-fns";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { subjects } = useStudy();
+
+  const today = new Date();
+  const upcomingExams = subjects
+    .filter(s => {
+      try {
+        if (!s.examDate) return false;
+        const examDate = parseISO(s.examDate);
+        return isAfter(examDate, today) || differenceInDays(examDate, today) === 0;
+      } catch {
+        return false;
+      }
+    })
+    .sort((a, b) => {
+      try {
+        return parseISO(a.examDate).getTime() - parseISO(b.examDate).getTime();
+      } catch {
+        return 0;
+      }
+    });
+
+  const nearestExam = upcomingExams[0];
+  const daysUntilExam = nearestExam 
+    ? Math.max(0, differenceInDays(parseISO(nearestExam.examDate), today))
+    : null;
 
   const navItems = [
     { href: "/", label: "Overview", icon: LayoutGrid },
@@ -82,13 +108,37 @@ export function Sidebar() {
 
       <div className="absolute bottom-0 left-0 w-full border-t border-sidebar-border bg-sidebar p-4">
         <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50">
-           <div className="flex items-center justify-between mb-2">
-             <span className="text-xs font-medium text-muted-foreground">Exam Season</span>
-             <span className="text-xs font-bold text-primary">12 days left</span>
-           </div>
-           <div className="h-1.5 w-full bg-sidebar-border rounded-full overflow-hidden">
-             <div className="h-full bg-primary w-[65%] rounded-full"></div>
-           </div>
+           {nearestExam ? (
+             <>
+               <div className="flex items-center justify-between mb-2">
+                 <span className="text-xs font-medium text-muted-foreground truncate max-w-[120px]" title={nearestExam.name}>
+                   {nearestExam.name}
+                 </span>
+                 <span className={cn(
+                   "text-xs font-bold",
+                   daysUntilExam !== null && daysUntilExam <= 3 ? "text-destructive" : "text-primary"
+                 )}>
+                   {daysUntilExam === 0 ? "Today!" : `${daysUntilExam} day${daysUntilExam === 1 ? '' : 's'} left`}
+                 </span>
+               </div>
+               <div className="h-1.5 w-full bg-sidebar-border rounded-full overflow-hidden">
+                 <div 
+                   className={cn(
+                     "h-full rounded-full transition-all",
+                     daysUntilExam !== null && daysUntilExam <= 3 ? "bg-destructive" : "bg-primary"
+                   )} 
+                   style={{ width: `${nearestExam.studyScore}%` }}
+                 ></div>
+               </div>
+               <div className="text-[10px] text-muted-foreground mt-1 text-right">
+                 {nearestExam.studyScore}% prepared
+               </div>
+             </>
+           ) : (
+             <div className="text-xs text-muted-foreground text-center py-2">
+               No upcoming exams
+             </div>
+           )}
         </div>
       </div>
     </aside>
