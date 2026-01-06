@@ -25,23 +25,24 @@ import { Plus, CheckCircle2 } from "lucide-react";
 export function LogStudyDialog({ children }: { children?: React.ReactNode }) {
   const { subjects, problems, addLog } = useStudy();
   const [open, setOpen] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [duration, setDuration] = useState("");
   const [description, setDescription] = useState("");
   const [solvedProblem, setSolvedProblem] = useState<string>("none");
 
-  const activeProblems = problems.filter(p => p.subjectId === selectedSubject && p.status === "active");
+  const selectedSubjectId = selectedSubject ? parseInt(selectedSubject) : null;
+  const activeProblems = problems.filter(p => p.subjectId === selectedSubjectId && p.status === "active");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSubject || !duration) return;
 
     addLog({
-      subjectId: selectedSubject,
+      subjectId: parseInt(selectedSubject),
       durationMinutes: parseInt(duration),
       description: description || "Study session",
       date: new Date().toISOString().split("T")[0],
-      solvedProblemId: solvedProblem !== "none" ? solvedProblem : undefined
+      solvedProblemId: solvedProblem !== "none" ? parseInt(solvedProblem) : undefined
     });
 
     setOpen(false);
@@ -80,7 +81,7 @@ export function LogStudyDialog({ children }: { children?: React.ReactNode }) {
               </SelectTrigger>
               <SelectContent>
                 {subjects.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -127,7 +128,7 @@ export function LogStudyDialog({ children }: { children?: React.ReactNode }) {
                 <SelectContent>
                   <SelectItem value="none">No specific problem solved</SelectItem>
                   {activeProblems.map((p) => (
-                    <SelectItem key={p.id} value={p.id} className="max-w-[300px] truncate">
+                    <SelectItem key={p.id} value={String(p.id)} className="max-w-[300px] truncate">
                       {p.description}
                     </SelectItem>
                   ))}
