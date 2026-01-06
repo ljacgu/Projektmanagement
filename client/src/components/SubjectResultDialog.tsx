@@ -19,6 +19,7 @@ import { Upload } from "lucide-react";
 
 const resultSchema = z.object({
   grade: z.coerce.number().min(1.0, "Grade cannot be better than 1.0").max(5.0, "Grade cannot be worse than 5.0"),
+  notes: z.string().optional(),
   file: z.any().optional(), // In a real app we'd validate file type
 });
 
@@ -26,18 +27,24 @@ type ResultFormValues = z.infer<typeof resultSchema>;
 
 export function SubjectResultDialog({ children, subjectId, subjectName }: { children: React.ReactNode; subjectId: string; subjectName: string }) {
   const [open, setOpen] = useState(false);
-  const { updateSubject, addFile } = useStudy();
+  const { updateSubject, addFile, subjects } = useStudy();
+  
+  const subject = subjects.find(s => s.id === subjectId);
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ResultFormValues>({
     resolver: zodResolver(resultSchema),
     defaultValues: {
-      grade: 4.0
+      grade: subject?.grade || 4.0,
+      notes: subject?.notes || ""
     }
   });
 
   const onSubmit = (data: ResultFormValues) => {
-    // 1. Update grade
-    updateSubject(subjectId, { grade: data.grade });
+    // 1. Update grade and notes
+    updateSubject(subjectId, { 
+      grade: data.grade,
+      notes: data.notes 
+    });
 
     // 2. Mock file upload if file provided
     if (data.file && data.file.length > 0) {
@@ -63,7 +70,7 @@ export function SubjectResultDialog({ children, subjectId, subjectName }: { chil
         <DialogHeader>
           <DialogTitle>Exam Results: {subjectName}</DialogTitle>
           <DialogDescription>
-            Record your grade (1.0 - 5.0) and upload exam summary.
+            Record your grade (1.0 - 5.0), notes, and upload exam summary.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -79,6 +86,16 @@ export function SubjectResultDialog({ children, subjectId, subjectName }: { chil
             />
             {errors.grade && <p className="text-sm text-destructive">{errors.grade.message}</p>}
             <p className="text-xs text-muted-foreground">Passed: &le; 4.4, Failed: &gt; 4.4</p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="notes">Exam Notes</Label>
+            <textarea 
+              id="notes" 
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Reflections, topics to review, or general notes..."
+              {...register("notes")}
+            />
           </div>
 
           <div className="space-y-2">
