@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStudy } from "@/lib/study-context";
 
 const eventSchema = z.object({
@@ -36,6 +36,12 @@ export function AddEventDialog({ children, defaultDate }: { children: React.Reac
       date: defaultDate ? defaultDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
     }
   });
+
+  useEffect(() => {
+    if (open && defaultDate) {
+      setValue("date", defaultDate.toISOString().split("T")[0]);
+    }
+  }, [open, defaultDate, setValue]);
 
   const onSubmit = (data: EventFormValues) => {
     let color = "bg-slate-500";
