@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { differenceInDays, parseISO, isAfter, format } from "date-fns";
+import { differenceInDays, parseISO, isAfter, format, isToday, isThisWeek } from "date-fns";
 import { useState, useEffect } from "react";
 
 function useTheme() {
@@ -61,8 +61,38 @@ function useTheme() {
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { subjects } = useStudy();
+  const { subjects, problems, logs, user } = useStudy();
   const { isDark, toggleTheme } = useTheme();
+  
+  const activeProblems = problems.filter(p => p.status === "active");
+  
+  const todayLogs = logs.filter(l => {
+    try {
+      return isToday(parseISO(l.date));
+    } catch { return false; }
+  });
+  const todayHours = Math.round(todayLogs.reduce((acc, l) => acc + l.durationMinutes, 0) / 60 * 10) / 10;
+  
+  const weekLogs = logs.filter(l => {
+    try {
+      return isThisWeek(parseISO(l.date), { weekStartsOn: 1 });
+    } catch { return false; }
+  });
+  const weekHours = Math.round(weekLogs.reduce((acc, l) => acc + l.durationMinutes, 0) / 60 * 10) / 10;
+  
+  const todayTarget = 2;
+  const weekTarget = 14;
+  const userName = user?.name || "Student";
+  
+  const getMotivationalMessage = () => {
+    if (todayHours >= todayTarget && weekHours >= weekTarget * 0.5) {
+      return `Great work, ${userName}!`;
+    } else if (todayHours < todayTarget * 0.5) {
+      return `You need to focus, ${userName}!`;
+    } else {
+      return `Keep pushing, ${userName}!`;
+    }
+  };
 
   const today = new Date();
   const upcomingExams = subjects
@@ -147,40 +177,52 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full border-t border-sidebar-border bg-sidebar p-4">
+      <div className="absolute bottom-0 left-0 w-full border-t border-sidebar-border bg-sidebar p-4 space-y-3">
         <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50">
-           {nearestExam ? (
-             <>
-               <div className="flex items-center justify-between mb-2">
-                 <span className="text-xs font-medium text-muted-foreground truncate max-w-[120px]" title={nearestExam.name}>
-                   {nearestExam.name}
-                 </span>
-                 <span className={cn(
-                   "text-xs font-bold",
-                   daysUntilExam !== null && daysUntilExam <= 3 ? "text-destructive" : "text-primary"
-                 )}>
-                   {daysUntilExam === 0 ? "Today!" : `${daysUntilExam} day${daysUntilExam === 1 ? '' : 's'} left`}
-                 </span>
-               </div>
-               <div className="h-1.5 w-full bg-sidebar-border rounded-full overflow-hidden">
-                 <div 
-                   className={cn(
-                     "h-full rounded-full transition-all",
-                     daysUntilExam !== null && daysUntilExam <= 3 ? "bg-destructive" : "bg-primary"
-                   )} 
-                   style={{ width: `${nearestExam.studyScore}%` }}
-                 ></div>
-               </div>
-               <div className="text-[10px] text-muted-foreground mt-1 text-right">
-                 {nearestExam.studyScore}% prepared
-               </div>
-             </>
-           ) : (
-             <div className="text-xs text-muted-foreground text-center py-2">
-               No upcoming exams
-             </div>
-           )}
+          <div className={cn(
+            "text-xs font-semibold mb-2",
+            todayHours >= todayTarget ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+          )}>
+            {getMotivationalMessage()}
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-background/50 rounded p-2">
+              <div className="text-muted-foreground">Today</div>
+              <div className={cn(
+                "font-bold",
+                todayHours >= todayTarget ? "text-emerald-600" : "text-amber-600"
+              )}>
+                {todayHours}h <span className="font-normal text-muted-foreground">/ {todayTarget}h</span>
+              </div>
+            </div>
+            <div className="bg-background/50 rounded p-2">
+              <div className="text-muted-foreground">This Week</div>
+              <div className={cn(
+                "font-bold",
+                weekHours >= weekTarget * 0.5 ? "text-emerald-600" : "text-amber-600"
+              )}>
+                {weekHours}h <span className="font-normal text-muted-foreground">/ {weekTarget}h</span>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        <Link href="/stats#problems-overview">
+          <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50 hover:bg-sidebar-accent transition-colors cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className={cn(
+                  "h-4 w-4",
+                  activeProblems.length > 0 ? "text-amber-500" : "text-emerald-500"
+                )} />
+                <span className="text-xs font-medium">Active Problems</span>
+              </div>
+              <Badge variant={activeProblems.length > 0 ? "destructive" : "secondary"} className="text-xs">
+                {activeProblems.length}
+              </Badge>
+            </div>
+          </div>
+        </Link>
       </div>
     </aside>
   );
