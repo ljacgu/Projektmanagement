@@ -306,107 +306,99 @@ export default function CalendarPage() {
       const nextWeekStart = addDays(weekStart, 7);
       const nextWeekDays = eachDayOfInterval({ start: nextWeekStart, end: addDays(nextWeekStart, 6) });
       
+      const renderWeekDay = (day: Date) => {
+        const allEvents = getAllForDate(day);
+        const isTodayDate = isSameDay(day, new Date());
+        const isSelected = isSameDay(day, selectedDate);
+        const dayInfo = getDayInfo(day);
+        
+        return (
+          <div 
+            key={day.toISOString()}
+            onClick={() => setSelectedDate(day)}
+            className={cn(
+              "p-3 rounded-xl border-2 cursor-pointer transition-all min-h-[140px]",
+              isSelected ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : "",
+              isTodayDate ? "bg-primary/10 border-primary shadow-lg" : "bg-card hover:bg-secondary/50 border-border",
+              dayInfo.level === 4 && "border-red-500",
+              dayInfo.level === 3 && "border-orange-500"
+            )}
+          >
+            <div className="text-center mb-3">
+              <div className="text-sm font-medium text-muted-foreground">{format(day, "EEE")}</div>
+              <div className={cn(
+                "text-2xl font-bold mt-1",
+                isTodayDate && "text-primary",
+                isSelected && !isTodayDate && "text-primary"
+              )}>{format(day, "d")}</div>
+              <div className="text-xs text-muted-foreground">{format(day, "MMM")}</div>
+            </div>
+            {dayInfo.level > 0 && (
+              <div className={cn("h-2 w-full rounded-full mb-2", dayInfo.bgClass)} />
+            )}
+            <div className="space-y-1.5">
+              {allEvents.slice(0, 3).map((item: any) => (
+                <div 
+                  key={item.id}
+                  className={cn(
+                    "text-xs px-2 py-1 rounded text-white truncate font-medium",
+                    item.isExam ? "bg-red-500" : item.color
+                  )}
+                >
+                  {item.name || item.title}
+                </div>
+              ))}
+              {allEvents.length > 3 && (
+                <div className="text-xs text-muted-foreground font-medium">+{allEvents.length - 3} more</div>
+              )}
+            </div>
+          </div>
+        );
+      };
+      
       return (
         <div className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSelectedDate(addDays(selectedDate, -14))}
+              className="gap-2"
+              data-testid="button-prev-2weeks"
+            >
+              <ChevronLeft className="h-4 w-4" /> Previous 2 Weeks
+            </Button>
+            <h2 className="text-lg font-bold font-serif">
+              {format(weekStart, "MMM d")} - {format(addDays(nextWeekStart, 6), "MMM d, yyyy")}
+            </h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSelectedDate(addDays(selectedDate, 14))}
+              className="gap-2"
+              data-testid="button-next-2weeks"
+            >
+              Next 2 Weeks <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Current Week</h3>
-            <div className="grid grid-cols-7 gap-2">
-              {currentWeekDays.map((day) => {
-                const allEvents = getAllForDate(day);
-                const isToday = isSameDay(day, new Date());
-                const dayInfo = getDayInfo(day);
-                
-                return (
-                  <div 
-                    key={day.toISOString()}
-                    onClick={() => setSelectedDate(day)}
-                    className={cn(
-                      "p-2 rounded-lg border cursor-pointer transition-all min-h-[120px]",
-                      isToday ? "bg-primary/10 border-primary shadow-md" : "bg-card hover:bg-secondary/50",
-                      dayInfo.level === 4 && "border-red-500 border-2",
-                      dayInfo.level === 3 && "border-orange-500"
-                    )}
-                  >
-                    <div className="text-center mb-2">
-                      <div className="text-xs text-muted-foreground">{format(day, "EEE")}</div>
-                      <div className={cn(
-                        "text-lg font-bold",
-                        isToday && "text-primary"
-                      )}>{format(day, "d")}</div>
-                    </div>
-                    {dayInfo.level > 0 && (
-                      <div className={cn("h-1.5 w-full rounded-full mb-2", dayInfo.bgClass)} />
-                    )}
-                    <div className="space-y-1">
-                      {allEvents.slice(0, 2).map((item: any) => (
-                        <div 
-                          key={item.id}
-                          className={cn(
-                            "text-[10px] px-1 py-0.5 rounded text-white truncate",
-                            item.isExam ? "bg-red-500" : item.color
-                          )}
-                        >
-                          {item.name || item.title}
-                        </div>
-                      ))}
-                      {allEvents.length > 2 && (
-                        <div className="text-[10px] text-muted-foreground">+{allEvents.length - 2} more</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4" />
+              Week of {format(weekStart, "MMM d")}
+            </h3>
+            <div className="grid grid-cols-7 gap-3">
+              {currentWeekDays.map(renderWeekDay)}
             </div>
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Next Week</h3>
-            <div className="grid grid-cols-7 gap-2">
-              {nextWeekDays.map((day) => {
-                const allEvents = getAllForDate(day);
-                const isToday = isSameDay(day, new Date());
-                const dayInfo = getDayInfo(day);
-                
-                return (
-                  <div 
-                    key={day.toISOString()}
-                    onClick={() => setSelectedDate(day)}
-                    className={cn(
-                      "p-2 rounded-lg border cursor-pointer transition-all min-h-[120px]",
-                      isToday ? "bg-primary/10 border-primary shadow-md" : "bg-card hover:bg-secondary/50",
-                      dayInfo.level === 4 && "border-red-500 border-2",
-                      dayInfo.level === 3 && "border-orange-500"
-                    )}
-                  >
-                    <div className="text-center mb-2">
-                      <div className="text-xs text-muted-foreground">{format(day, "EEE")}</div>
-                      <div className={cn(
-                        "text-lg font-bold",
-                        isToday && "text-primary"
-                      )}>{format(day, "d")}</div>
-                    </div>
-                    {dayInfo.level > 0 && (
-                      <div className={cn("h-1.5 w-full rounded-full mb-2", dayInfo.bgClass)} />
-                    )}
-                    <div className="space-y-1">
-                      {allEvents.slice(0, 2).map((item: any) => (
-                        <div 
-                          key={item.id}
-                          className={cn(
-                            "text-[10px] px-1 py-0.5 rounded text-white truncate",
-                            item.isExam ? "bg-red-500" : item.color
-                          )}
-                        >
-                          {item.name || item.title}
-                        </div>
-                      ))}
-                      {allEvents.length > 2 && (
-                        <div className="text-[10px] text-muted-foreground">+{allEvents.length - 2} more</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4" />
+              Week of {format(nextWeekStart, "MMM d")}
+            </h3>
+            <div className="grid grid-cols-7 gap-3">
+              {nextWeekDays.map(renderWeekDay)}
             </div>
           </div>
         </div>
