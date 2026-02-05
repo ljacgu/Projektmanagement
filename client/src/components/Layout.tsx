@@ -13,7 +13,9 @@ import {
   User,
   Menu,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Moon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +32,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays, parseISO, isAfter, format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useTheme() {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('studyflow_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('studyflow_theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
+  return { isDark, toggleTheme };
+}
 
 export function Sidebar() {
   const [location] = useLocation();
   const { subjects } = useStudy();
+  const { isDark, toggleTheme } = useTheme();
 
   const today = new Date();
   const upcomingExams = subjects
@@ -70,13 +98,22 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-sidebar text-sidebar-foreground transition-transform hidden md:block">
-      <div className="flex h-16 items-center border-b border-sidebar-border px-6">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
         <div className="flex items-center gap-2 font-serif font-bold text-xl tracking-tight">
           <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary">
             <BookOpen className="h-4 w-4" />
           </div>
           <span className="text-foreground">StudyFlow</span>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          data-testid="button-theme-toggle"
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
       </div>
 
       <div className="px-4 py-6">
@@ -153,6 +190,7 @@ export function MobileMenu() {
   const [location, setLocation] = useLocation();
   const { subjects } = useStudy();
   const [isOpen, setIsOpen] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   const today = new Date();
   const upcomingExams = subjects
