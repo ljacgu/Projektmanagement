@@ -58,9 +58,10 @@ export default function StatsPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   useEffect(() => {
-    if (window.location.hash === "#problems-overview") {
+    const hash = window.location.hash;
+    if (hash === "#problems-overview" || hash === "#learning-time-evaluation") {
       setTimeout(() => {
-        const element = document.getElementById("problems-overview");
+        const element = document.getElementById(hash.substring(1));
         if (element) {
           const yOffset = -20;
           const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -378,7 +379,7 @@ export default function StatsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Learning Time Evaluation</CardTitle>
+                <CardTitle id="learning-time-evaluation">Learning Time Evaluation</CardTitle>
                 <CardDescription>Assessment of your study habits</CardDescription>
               </CardHeader>
               <CardContent>
