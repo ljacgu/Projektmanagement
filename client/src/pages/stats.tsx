@@ -21,12 +21,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function StatsPage() {
-  const { logs, subjects, problems, addSubject } = useStudy();
+  const { logs, subjects, problems, addSubject, addFile } = useStudy();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [examDate, setExamDate] = useState("");
   const [grade, setGrade] = useState("2.0");
   const [notes, setNotes] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const passedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade <= 44);
   const failedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade > 44);
@@ -35,7 +36,28 @@ export default function StatsPage() {
     ? passedExams.reduce((acc, s) => acc + ((s.grade || 0) / 10), 0) / passedExams.length 
     : 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !examDate || !grade) return;
 
@@ -51,11 +73,32 @@ export default function StatsPage() {
       notes: notes || null,
     });
 
+    // Upload files after a brief delay to ensure subject is created
+    if (selectedFiles.length > 0) {
+      setTimeout(async () => {
+        // Find the newly created subject
+        const newSubject = subjects.find(s => s.name === name && s.examDate === examDate);
+        if (newSubject) {
+          for (const file of selectedFiles) {
+            const base64Url = await fileToBase64(file);
+            addFile(newSubject.id, {
+              name: file.name,
+              type: file.type,
+              url: base64Url,
+              size: formatFileSize(file.size),
+              uploadedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }, 500);
+    }
+
     setOpen(false);
     setName("");
     setExamDate("");
     setGrade("2.0");
     setNotes("");
+    setSelectedFiles([]);
   };
 
   return (
@@ -127,6 +170,25 @@ export default function StatsPage() {
                     className="h-24"
                     data-testid="input-exam-notes"
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="exam-files">Attach Files (optional)</Label>
+                  <Input
+                    id="exam-files"
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
+                    data-testid="input-exam-files"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                  />
+                  <p className="text-xs text-muted-foreground">Upload old exams, scripts, or study materials (PDF, DOC, images)</p>
+                  {selectedFiles.length > 0 && (
+                    <div className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
+                      <Paperclip className="inline h-3 w-3 mr-1" />
+                      {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected: {selectedFiles.map(f => f.name).join(', ')}
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button type="submit" data-testid="button-submit-exam">
