@@ -6,7 +6,7 @@ import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Pap
 import { isBefore, parseISO, isToday, isThisWeek, isThisMonth, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFilesBySubject } from "@/lib/hooks";
 import type { Subject } from "@shared/schema";
 
@@ -56,6 +56,17 @@ export default function StatsPage() {
   const [grade, setGrade] = useState("2.0");
   const [notes, setNotes] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    if (window.location.hash === "#problems-overview") {
+      setTimeout(() => {
+        const element = document.getElementById("problems-overview");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  }, []);
 
   const passedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade <= 44);
   const failedExams = subjects.filter(s => s.grade !== null && s.grade !== undefined && s.grade > 44);
@@ -456,7 +467,7 @@ export default function StatsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card id="problems-overview">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" />
