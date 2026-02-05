@@ -178,34 +178,36 @@ export function Sidebar() {
       </div>
 
       <div className="absolute bottom-0 left-0 w-full border-t border-sidebar-border bg-sidebar p-4 space-y-3">
-        <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50">
-          <div className={cn(
-            "text-xs font-semibold mb-2",
-            todayHours >= todayTarget ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
-          )}>
-            {getMotivationalMessage()}
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-background/50 rounded p-2">
-              <div className="text-muted-foreground">Today</div>
-              <div className={cn(
-                "font-bold",
-                todayHours >= todayTarget ? "text-emerald-600" : "text-amber-600"
-              )}>
-                {todayHours}h <span className="font-normal text-muted-foreground">/ {todayTarget}h</span>
+        <Link href="/stats#learning-time-evaluation">
+          <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50 hover:bg-sidebar-accent transition-colors cursor-pointer">
+            <div className={cn(
+              "text-xs font-semibold mb-2",
+              todayHours >= todayTarget ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+            )}>
+              {getMotivationalMessage()}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-background/50 rounded p-2">
+                <div className="text-muted-foreground">Today</div>
+                <div className={cn(
+                  "font-bold",
+                  todayHours >= todayTarget ? "text-emerald-600" : "text-amber-600"
+                )}>
+                  {todayHours}h <span className="font-normal text-muted-foreground">/ {todayTarget}h</span>
+                </div>
+              </div>
+              <div className="bg-background/50 rounded p-2">
+                <div className="text-muted-foreground">This Week</div>
+                <div className={cn(
+                  "font-bold",
+                  weekHours >= weekTarget * 0.5 ? "text-emerald-600" : "text-amber-600"
+                )}>
+                  {weekHours}h <span className="font-normal text-muted-foreground">/ {weekTarget}h</span>
+                </div>
               </div>
             </div>
-            <div className="bg-background/50 rounded p-2">
-              <div className="text-muted-foreground">This Week</div>
-              <div className={cn(
-                "font-bold",
-                weekHours >= weekTarget * 0.5 ? "text-emerald-600" : "text-amber-600"
-              )}>
-                {weekHours}h <span className="font-normal text-muted-foreground">/ {weekTarget}h</span>
-              </div>
-            </div>
           </div>
-        </div>
+        </Link>
         
         <Link href="/stats#problems-overview">
           <div className="rounded-lg bg-sidebar-accent/50 p-3 border border-sidebar-border/50 hover:bg-sidebar-accent transition-colors cursor-pointer">
