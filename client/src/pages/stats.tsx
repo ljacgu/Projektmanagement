@@ -179,7 +179,7 @@ export default function StatsPage() {
                 <CardTitle>Session History</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[280px] pr-4">
+                <ScrollArea className="h-[350px] pr-4">
                   <div className="space-y-6">
                     {logs.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
