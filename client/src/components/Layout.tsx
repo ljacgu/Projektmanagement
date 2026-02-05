@@ -106,13 +106,13 @@ export function Sidebar() {
           <span className="text-foreground">StudyFlow</span>
         </div>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={toggleTheme}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 bg-secondary hover:bg-primary/20 border-primary/30"
           data-testid="button-theme-toggle"
         >
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {isDark ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-primary" />}
         </Button>
       </div>
 
