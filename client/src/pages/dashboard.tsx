@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { differenceInDays, parseISO } from "date-fns";
-import heroImage from "@assets/generated_images/calm_study_environment_illustration.png";
+import heroImage from "@assets/generated_images/study_hero_background.png";
 import { cn } from "@/lib/utils";
 import { LogStudyDialog } from "@/components/LogStudyDialog";
 import { Link } from "wouter";
