@@ -84,22 +84,31 @@ export function AddEventDialog({ children, defaultDate }: { children: React.Reac
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title">Event Title</Label>
-            <Input 
-              id="title" 
-              {...register("title")} 
-              placeholder="e.g. Dentist Appointment" 
-              list="previous-titles"
-              autoComplete="off"
-            />
-            {previousTitles.length > 0 && (
-              <datalist id="previous-titles">
-                {previousTitles.map((title) => (
-                  <option key={title} value={title} />
-                ))}
-              </datalist>
-            )}
-            {previousTitles.length > 0 && (
-              <p className="text-xs text-muted-foreground">Start typing or select from previous events</p>
+            {previousTitles.length > 0 ? (
+              <>
+                <select
+                  {...register("title")}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select or type below...</option>
+                  {previousTitles.map((title) => (
+                    <option key={title} value={title}>{title}</option>
+                  ))}
+                </select>
+                <Input 
+                  id="title-custom" 
+                  placeholder="Or type a new title..."
+                  onChange={(e) => setValue("title", e.target.value)}
+                  className="mt-2"
+                />
+              </>
+            ) : (
+              <Input 
+                id="title" 
+                {...register("title")} 
+                placeholder="e.g. Dentist Appointment"
+              />
             )}
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
