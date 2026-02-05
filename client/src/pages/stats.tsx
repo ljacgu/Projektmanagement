@@ -174,12 +174,12 @@ export default function StatsPage() {
               </Card>
             </div>
 
-            <Card style={{ minHeight: 'calc(100vh - 400px)' }}>
-              <CardHeader>
+            <Card>
+              <CardHeader className="pb-2">
                 <CardTitle>Session History</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[calc(100vh-500px)] min-h-[300px] pr-4">
+                <ScrollArea className="h-[280px] pr-4">
                   <div className="space-y-6">
                     {logs.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -368,16 +368,16 @@ export default function StatsPage() {
           </div>
 
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            <Card className="h-full border-l-4 border-l-primary">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-primary" />
+            <Card className="border-l-4 border-l-primary">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <GraduationCap className="h-4 w-4 text-primary" />
                   Passed Exams
                 </CardTitle>
-                <CardDescription>Grades 1.0 - 4.4</CardDescription>
+                <CardDescription className="text-xs">Grades 1.0 - 4.4</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[300px] pr-4">
+                <ScrollArea className="h-[150px] pr-4">
                   <div className="space-y-4">
                     {passedExams.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground text-sm">
@@ -410,16 +410,16 @@ export default function StatsPage() {
               </CardContent>
             </Card>
 
-            <Card className="h-full border-l-4 border-l-destructive">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <XCircle className="h-5 w-5 text-destructive" />
+            <Card className="border-l-4 border-l-destructive">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <XCircle className="h-4 w-4 text-destructive" />
                   Failed Exams
                 </CardTitle>
-                <CardDescription>Grades &gt; 4.4</CardDescription>
+                <CardDescription className="text-xs">Grades &gt; 4.4</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[200px] pr-4">
+                <ScrollArea className="h-[120px] pr-4">
                   <div className="space-y-4">
                     {failedExams.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground text-sm">
