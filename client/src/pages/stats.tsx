@@ -62,9 +62,11 @@ export default function StatsPage() {
       setTimeout(() => {
         const element = document.getElementById("problems-overview");
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
+          const yOffset = -20;
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
         }
-      }, 100);
+      }, 300);
     }
   }, []);
 
