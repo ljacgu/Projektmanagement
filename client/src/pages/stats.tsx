@@ -2,8 +2,8 @@ import { Layout } from "@/components/Layout";
 import { useStudy } from "@/lib/study-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip } from "lucide-react";
-import { isBefore, parseISO } from "date-fns";
+import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { isBefore, parseISO, isToday, isThisWeek, isThisMonth, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -174,12 +174,12 @@ export default function StatsPage() {
               </Card>
             </div>
 
-            <Card className="h-[500px]">
+            <Card style={{ minHeight: 'calc(100vh - 400px)' }}>
               <CardHeader>
                 <CardTitle>Session History</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[400px] pr-4">
+                <ScrollArea className="h-[calc(100vh-500px)] min-h-[300px] pr-4">
                   <div className="space-y-6">
                     {logs.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -226,6 +226,143 @@ export default function StatsPage() {
                     )}
                   </div>
                 </ScrollArea>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Study Time by Subject</CardTitle>
+                <CardDescription>Hours spent on each subject</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {subjects.filter(s => !s.grade).length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No active subjects. Add subjects to track study time.
+                    </div>
+                  ) : (
+                    subjects.filter(s => !s.grade).map((subject) => {
+                      const subjectLogs = logs.filter(l => l.subjectId === subject.id);
+                      const totalMinutes = subjectLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
+                      const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
+                      const targetHours = subject.targetHours || 20;
+                      const progress = Math.min(100, (totalHours / targetHours) * 100);
+                      
+                      return (
+                        <div key={subject.id} className="space-y-2" data-testid={`subject-time-${subject.id}`}>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${subject.color}`} />
+                              <span className="font-medium">{subject.name}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {totalHours}h / {targetHours}h target
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${subject.color}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Learning Time Evaluation</CardTitle>
+                <CardDescription>Assessment of your study habits</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  {(() => {
+                    const today = new Date();
+                    
+                    const todayLogs = logs.filter(l => {
+                      try {
+                        return isToday(parseISO(l.date));
+                      } catch { return false; }
+                    });
+                    const todayHours = Math.round(todayLogs.reduce((acc, l) => acc + l.durationMinutes, 0) / 60 * 10) / 10;
+                    const todayTarget = 2;
+                    const todayStatus = todayHours >= todayTarget ? "good" : todayHours >= todayTarget * 0.5 ? "ok" : "low";
+                    
+                    const weekLogs = logs.filter(l => {
+                      try {
+                        return isThisWeek(parseISO(l.date), { weekStartsOn: 1 });
+                      } catch { return false; }
+                    });
+                    const weekHours = Math.round(weekLogs.reduce((acc, l) => acc + l.durationMinutes, 0) / 60 * 10) / 10;
+                    const weekTarget = 14;
+                    const weekStatus = weekHours >= weekTarget ? "good" : weekHours >= weekTarget * 0.5 ? "ok" : "low";
+                    
+                    const monthLogs = logs.filter(l => {
+                      try {
+                        return isThisMonth(parseISO(l.date));
+                      } catch { return false; }
+                    });
+                    const monthHours = Math.round(monthLogs.reduce((acc, l) => acc + l.durationMinutes, 0) / 60 * 10) / 10;
+                    const monthTarget = 40;
+                    const monthStatus = monthHours >= monthTarget ? "good" : monthHours >= monthTarget * 0.5 ? "ok" : "low";
+                    
+                    const getStatusColor = (status: string) => {
+                      if (status === "good") return "text-emerald-600 bg-emerald-50 border-emerald-200";
+                      if (status === "ok") return "text-amber-600 bg-amber-50 border-amber-200";
+                      return "text-destructive bg-destructive/10 border-destructive/20";
+                    };
+                    
+                    const getStatusIcon = (status: string) => {
+                      if (status === "good") return <TrendingUp className="h-5 w-5" />;
+                      if (status === "ok") return <Minus className="h-5 w-5" />;
+                      return <TrendingDown className="h-5 w-5" />;
+                    };
+                    
+                    const getStatusMessage = (status: string, period: string) => {
+                      if (status === "good") return `Great ${period}!`;
+                      if (status === "ok") return "Keep going!";
+                      return "Need more study time";
+                    };
+                    
+                    return (
+                      <>
+                        <div className={`p-4 rounded-lg border ${getStatusColor(todayStatus)}`} data-testid="eval-today">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold">Today</span>
+                            {getStatusIcon(todayStatus)}
+                          </div>
+                          <div className="text-2xl font-bold">{todayHours}h</div>
+                          <div className="text-xs mt-1">Target: {todayTarget}h/day</div>
+                          <div className="text-xs font-medium mt-2">{getStatusMessage(todayStatus, "day")}</div>
+                        </div>
+                        
+                        <div className={`p-4 rounded-lg border ${getStatusColor(weekStatus)}`} data-testid="eval-week">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold">This Week</span>
+                            {getStatusIcon(weekStatus)}
+                          </div>
+                          <div className="text-2xl font-bold">{weekHours}h</div>
+                          <div className="text-xs mt-1">Target: {weekTarget}h/week</div>
+                          <div className="text-xs font-medium mt-2">{getStatusMessage(weekStatus, "week")}</div>
+                        </div>
+                        
+                        <div className={`p-4 rounded-lg border ${getStatusColor(monthStatus)}`} data-testid="eval-month">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold">This Month</span>
+                            {getStatusIcon(monthStatus)}
+                          </div>
+                          <div className="text-2xl font-bold">{monthHours}h</div>
+                          <div className="text-xs mt-1">Target: {monthTarget}h/month</div>
+                          <div className="text-xs font-medium mt-2">{getStatusMessage(monthStatus, "month")}</div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
               </CardContent>
             </Card>
           </div>
