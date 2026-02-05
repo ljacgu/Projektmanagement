@@ -2,11 +2,39 @@ import { Layout } from "@/components/Layout";
 import { useStudy } from "@/lib/study-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip, TrendingUp, TrendingDown, Minus, FileText, Download } from "lucide-react";
 import { isBefore, parseISO, isToday, isThisWeek, isThisMonth, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useFilesBySubject } from "@/lib/hooks";
+import type { Subject } from "@shared/schema";
+
+function ExamFiles({ subjectId }: { subjectId: number }) {
+  const { data: files = [] } = useFilesBySubject(subjectId);
+  
+  if (files.length === 0) return null;
+  
+  return (
+    <div className="mt-2 space-y-1">
+      {files.map((file) => (
+        <a
+          key={file.id}
+          href={file.url}
+          download={file.name}
+          className="flex items-center gap-2 text-xs text-primary hover:underline bg-primary/5 p-2 rounded border border-primary/10"
+          data-testid={`file-${file.id}`}
+        >
+          <FileText className="h-3 w-3" />
+          <span className="truncate flex-1">{file.name}</span>
+          <span className="text-muted-foreground">{file.size}</span>
+          <Download className="h-3 w-3" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
 import {
   Dialog,
   DialogContent,
@@ -439,7 +467,7 @@ export default function StatsPage() {
                 <CardDescription className="text-xs">Grades 1.0 - 4.4</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[150px] pr-4">
+                <ScrollArea className={passedExams.length > 3 ? "h-[300px] pr-4" : "pr-4"}>
                   <div className="space-y-4">
                     {passedExams.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground text-sm">
@@ -464,6 +492,7 @@ export default function StatsPage() {
                               {subject.notes}
                             </div>
                           )}
+                          <ExamFiles subjectId={subject.id} />
                         </div>
                       ))
                     )}
