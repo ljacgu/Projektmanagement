@@ -29,17 +29,24 @@ export function AddEventDialog({ children, defaultDate }: { children: React.Reac
   const [open, setOpen] = useState(false);
   const { addPersonalEvent } = useStudy();
   
+  const formatDateLocal = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       type: "appointment",
-      date: defaultDate ? defaultDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
+      date: defaultDate ? formatDateLocal(defaultDate) : formatDateLocal(new Date())
     }
   });
 
   useEffect(() => {
     if (open && defaultDate) {
-      setValue("date", defaultDate.toISOString().split("T")[0]);
+      setValue("date", formatDateLocal(defaultDate));
     }
   }, [open, defaultDate, setValue]);
 
