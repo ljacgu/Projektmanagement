@@ -455,6 +455,72 @@ export default function StatsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  Problems Overview
+                </CardTitle>
+                <CardDescription>All active problems grouped by subject</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {subjects.filter(s => !s.grade).length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No active subjects. Add subjects to track problems.
+                    </div>
+                  ) : (
+                    subjects.filter(s => !s.grade).map((subject) => {
+                      const subjectProblems = problems.filter(p => p.subjectId === subject.id && p.status !== "solved");
+                      
+                      return (
+                        <div key={subject.id} className="space-y-3" data-testid={`problems-subject-${subject.id}`}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${subject.color}`} />
+                            <h4 className="font-semibold">{subject.name}</h4>
+                            <Badge variant="secondary" className="ml-auto">
+                              {subjectProblems.length} problem{subjectProblems.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                          
+                          {subjectProblems.length === 0 ? (
+                            <div className="text-sm text-muted-foreground pl-5 py-2 border-l-2 border-muted ml-1">
+                              No active problems - great job!
+                            </div>
+                          ) : (
+                            <div className="space-y-2 pl-5 border-l-2 border-muted ml-1">
+                              {subjectProblems.map((problem) => (
+                                <div 
+                                  key={problem.id} 
+                                  className={`p-3 rounded-lg border text-sm ${
+                                    problem.status === "refresh" 
+                                      ? "bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800" 
+                                      : "bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800"
+                                  }`}
+                                  data-testid={`problem-item-${problem.id}`}
+                                >
+                                  <p className="font-medium">{problem.description}</p>
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                    <Clock className="h-3 w-3" />
+                                    <span>Added {problem.createdAt}</span>
+                                    {problem.status === "refresh" && (
+                                      <Badge variant="outline" className="ml-auto text-blue-600 border-blue-300">
+                                        Needs Refresh
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="col-span-12 lg:col-span-4 space-y-6">
