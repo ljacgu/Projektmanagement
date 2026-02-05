@@ -27,7 +27,9 @@ type EventFormValues = z.infer<typeof eventSchema>;
 
 export function AddEventDialog({ children, defaultDate }: { children: React.ReactNode; defaultDate?: Date }) {
   const [open, setOpen] = useState(false);
-  const { addPersonalEvent } = useStudy();
+  const { addPersonalEvent, personalEvents } = useStudy();
+  
+  const previousTitles = [...new Set(personalEvents.map((e: any) => e.title))].filter(Boolean);
   
   const formatDateLocal = (date: Date) => {
     const year = date.getFullYear();
@@ -82,7 +84,23 @@ export function AddEventDialog({ children, defaultDate }: { children: React.Reac
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title">Event Title</Label>
-            <Input id="title" {...register("title")} placeholder="e.g. Dentist Appointment" />
+            <Input 
+              id="title" 
+              {...register("title")} 
+              placeholder="e.g. Dentist Appointment" 
+              list="previous-titles"
+              autoComplete="off"
+            />
+            {previousTitles.length > 0 && (
+              <datalist id="previous-titles">
+                {previousTitles.map((title) => (
+                  <option key={title} value={title} />
+                ))}
+              </datalist>
+            )}
+            {previousTitles.length > 0 && (
+              <p className="text-xs text-muted-foreground">Start typing or select from previous events</p>
+            )}
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
           
