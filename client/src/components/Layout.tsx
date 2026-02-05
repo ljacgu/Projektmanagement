@@ -353,15 +353,23 @@ export function Topbar() {
                     You have {activeProblems.length} active problems to work on.
                  </div>
                  {activeProblems.slice(0, 3).map((p) => (
-                   <DropdownMenuItem key={p.id} className="flex flex-col items-start gap-1 p-3">
+                   <DropdownMenuItem 
+                     key={p.id} 
+                     className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                     onClick={() => {
+                       window.location.href = "/stats#problems-overview";
+                     }}
+                   >
                       <span className="font-semibold">{p.description}</span>
                       <span className="text-xs text-muted-foreground">Needs attention</span>
                    </DropdownMenuItem>
                  ))}
                  {activeProblems.length > 3 && (
-                   <div className="p-2 text-center text-xs text-muted-foreground">
-                      + {activeProblems.length - 3} more
-                   </div>
+                   <Link href="/stats#problems-overview">
+                     <div className="p-2 text-center text-xs text-primary hover:underline cursor-pointer">
+                        View all {activeProblems.length} problems
+                     </div>
+                   </Link>
                  )}
               </div>
             ) : (
