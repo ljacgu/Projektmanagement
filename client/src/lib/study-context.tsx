@@ -13,6 +13,7 @@ import {
   useCreatePersonalEvent,
   useDeletePersonalEvent,
   useCreateFile,
+  useDeleteFile,
 } from "./hooks";
 import type { Subject, InsertSubject, InsertProblem, InsertStudyLog, InsertPersonalEvent, InsertStudyFile } from "@shared/schema";
 
@@ -41,6 +42,7 @@ interface StudyContextType {
   addLog: (log: InsertStudyLog) => void;
   solveProblem: (id: number) => void;
   addFile: (subjectId: number, file: Omit<InsertStudyFile, "subjectId">) => void;
+  deleteFile: (id: number) => void;
   addPersonalEvent: (event: InsertPersonalEvent) => void;
   deletePersonalEvent: (id: number) => void;
 }
@@ -71,6 +73,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   const createEventMutation = useCreatePersonalEvent();
   const deleteEventMutation = useDeletePersonalEvent();
   const createFileMutation = useCreateFile();
+  const deleteFileMutation = useDeleteFile();
 
   const login = (name: string, field: string) => {
     const newUser = { name, field };
@@ -113,6 +116,10 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     createFileMutation.mutate({ subjectId, file: newFile });
   };
 
+  const deleteFile = (id: number) => {
+    deleteFileMutation.mutate(id);
+  };
+
   const addPersonalEvent = (newEvent: InsertPersonalEvent) => {
     createEventMutation.mutate(newEvent);
   };
@@ -143,6 +150,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
         addLog,
         solveProblem,
         addFile,
+        deleteFile,
         addPersonalEvent,
         deletePersonalEvent,
       }}

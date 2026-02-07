@@ -34,6 +34,18 @@ import { AddSubjectDialog } from "@/components/AddSubjectDialog";
 import { AddProblemDialog } from "@/components/AddProblemDialog";
 import { SubjectResourcesDialog } from "@/components/SubjectResourcesDialog";
 import { useState } from "react";
+import { useFilesBySubject } from "@/lib/hooks";
+
+function FileCountButton({ subjectId, subjectName }: { subjectId: number; subjectName: string }) {
+  const { data: files = [] } = useFilesBySubject(subjectId);
+  return (
+    <SubjectResourcesDialog subjectId={subjectId} subjectName={subjectName}>
+      <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs" data-testid={`button-files-${subjectId}`}>
+        <Paperclip className="h-3.5 w-3.5" /> Files ({files.length})
+      </Button>
+    </SubjectResourcesDialog>
+  );
+}
 
 export default function SubjectsPage() {
   const { subjects, problems, deleteSubject, searchQuery } = useStudy();
@@ -67,7 +79,7 @@ export default function SubjectsPage() {
           {filteredSubjects.map((subject) => {
              const subjectProblems = problems.filter(p => p.subjectId === subject.id && p.status === "active");
              const problemCount = subjectProblems.length;
-             const fileCount = 0; // Files will be loaded separately
+             
              const colorClass = getSubjectColor(subject.studyScore);
              
              // Safety checks for new fields
@@ -167,11 +179,7 @@ export default function SubjectsPage() {
                            <Plus className="h-3.5 w-3.5" /> Problem
                         </Button>
                     </AddProblemDialog>
-                    <SubjectResourcesDialog subjectId={Number(subject.id)} subjectName={subject.name}>
-                        <Button variant="ghost" size="sm" className="w-full hover:bg-background gap-2 text-xs">
-                           <Paperclip className="h-3.5 w-3.5" /> Files ({fileCount})
-                        </Button>
-                    </SubjectResourcesDialog>
+                    <FileCountButton subjectId={Number(subject.id)} subjectName={subject.name} />
                  </CardFooter>
                </Card>
              );

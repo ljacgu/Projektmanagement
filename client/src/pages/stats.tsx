@@ -33,88 +33,108 @@ function ExamFiles({ subjectId }: { subjectId: number }) {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploading(true);
-    for (const file of Array.from(e.target.files)) {
-      const base64Url = await fileToBase64(file);
-      addFile(subjectId, {
-        name: file.name,
-        type: file.type,
-        url: base64Url,
-        size: formatFileSize(file.size),
-        uploadedAt: new Date().toISOString(),
-      });
+    try {
+      for (const file of Array.from(e.target.files)) {
+        const base64Url = await fileToBase64(file);
+        addFile(subjectId, {
+          name: file.name,
+          type: file.type,
+          url: base64Url,
+          size: formatFileSize(file.size),
+          uploadedAt: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
     }
     setUploading(false);
     e.target.value = "";
   };
 
+  const isImageType = (type: string) => type.startsWith("image/") || type === "image";
+  const isPdfType = (type: string) => type.includes("pdf");
+
   const handleView = (file: { url: string; name: string; type: string }) => {
+    if (file.url === "#") return;
     const safeName = file.name.replace(/[<>"'&]/g, '_');
-    if (file.type.startsWith("image/")) {
+    if (isImageType(file.type)) {
       const w = window.open("", "_blank");
       if (w) {
         w.document.title = safeName;
+        w.document.body.style.cssText = "margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#1a1a2e";
         const img = w.document.createElement("img");
         img.src = file.url;
         img.style.cssText = "max-width:100%;max-height:100vh;object-fit:contain";
-        w.document.body.style.cssText = "margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#111";
         w.document.body.appendChild(img);
       }
-    } else if (file.type === "application/pdf") {
+    } else if (isPdfType(file.type)) {
       const w = window.open("", "_blank");
       if (w) {
         w.document.title = safeName;
+        w.document.body.style.margin = "0";
         const iframe = w.document.createElement("iframe");
         iframe.src = file.url;
         iframe.style.cssText = "width:100%;height:100vh;border:none";
-        w.document.body.style.margin = "0";
         w.document.body.appendChild(iframe);
       }
     } else {
-      const a = document.createElement("a");
-      a.href = file.url;
-      a.download = file.name;
-      a.click();
+      handleDownload(file);
     }
+  };
+
+  const handleDownload = (file: { url: string; name: string }) => {
+    if (file.url === "#") return;
+    const a = document.createElement("a");
+    a.href = file.url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const getFileIcon = (type: string) => {
+    if (isPdfType(type)) return <FileText className="h-3.5 w-3.5 text-rose-500" />;
+    if (isImageType(type)) return <FileText className="h-3.5 w-3.5 text-blue-500" />;
+    return <FileText className="h-3.5 w-3.5 text-slate-500" />;
   };
   
   return (
-    <div className="mt-2 space-y-1">
+    <div className="mt-3 space-y-1.5">
       {files.map((file) => (
         <div
           key={file.id}
-          className="flex items-center gap-2 text-xs bg-primary/5 p-2 rounded border border-primary/10"
+          className="flex items-center gap-2 text-xs bg-muted/50 p-2.5 rounded-lg border"
           data-testid={`file-${file.id}`}
         >
-          <FileText className="h-3 w-3 text-primary" />
+          {getFileIcon(file.type)}
           <span className="truncate flex-1 font-medium">{file.name}</span>
-          <span className="text-muted-foreground">{file.size}</span>
+          <span className="text-muted-foreground text-[10px]">{file.size}</span>
           <button
             onClick={() => handleView(file)}
-            className="text-primary hover:text-primary/80 p-1 rounded hover:bg-primary/10"
+            className="text-blue-600 hover:text-blue-700 p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
             title="View file"
             data-testid={`button-view-file-${file.id}`}
           >
-            <Eye className="h-3 w-3" />
+            <Eye className="h-3.5 w-3.5" />
           </button>
-          <a
-            href={file.url}
-            download={file.name}
-            className="text-primary hover:text-primary/80 p-1 rounded hover:bg-primary/10"
+          <button
+            onClick={() => handleDownload(file)}
+            className="text-emerald-600 hover:text-emerald-700 p-1 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
             title="Download file"
             data-testid={`button-download-file-${file.id}`}
           >
-            <Download className="h-3 w-3" />
-          </a>
+            <Download className="h-3.5 w-3.5" />
+          </button>
         </div>
       ))}
-      <label className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary cursor-pointer p-2 rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors" data-testid={`button-attach-file-${subjectId}`}>
-        <Upload className="h-3 w-3" />
+      <label className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary cursor-pointer p-2.5 rounded-lg border border-dashed border-muted-foreground/20 hover:border-primary/40 hover:bg-muted/30 transition-all" data-testid={`button-attach-file-${subjectId}`}>
+        <Upload className="h-3.5 w-3.5" />
         <span>{uploading ? "Uploading..." : "Attach exam file"}</span>
         <input
           type="file"
           className="hidden"
           multiple
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
           onChange={handleUpload}
           data-testid={`input-upload-file-${subjectId}`}
         />
