@@ -663,11 +663,11 @@ export default function StatsPage() {
                       </div>
                     ) : (
                       passedExams.map((subject) => (
-                        <div key={subject.id} className="p-4 rounded-lg border bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50 transition-all" data-testid={`passed-exam-${subject.id}`}>
+                        <div key={subject.id} className="p-4 rounded-lg border bg-card hover:bg-muted/40 transition-all" data-testid={`passed-exam-${subject.id}`}>
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-semibold">{subject.name}</h4>
-                            <div className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold border border-emerald-200">
-                              <Award className="h-3 w-3" />
+                            <div className="flex items-center gap-1 bg-muted text-foreground px-2 py-1 rounded text-xs font-bold border">
+                              <Award className="h-3 w-3 text-primary" />
                               {(subject.grade! / 10).toFixed(1)}
                             </div>
                           </div>
@@ -675,7 +675,7 @@ export default function StatsPage() {
                             <span>Exam: {subject.examDate}</span>
                           </div>
                           {subject.notes && (
-                            <div className="mt-2 text-xs text-muted-foreground bg-white/50 p-2 rounded border">
+                            <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded border">
                               <Paperclip className="inline h-3 w-3 mr-1" />
                               {subject.notes}
                             </div>
