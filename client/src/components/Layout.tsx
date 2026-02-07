@@ -135,15 +135,6 @@ export function Sidebar() {
           </div>
           <span className="text-foreground">StudyFlow</span>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleTheme}
-          className="h-8 w-8 bg-secondary hover:bg-primary/20 border-primary/30"
-          data-testid="button-theme-toggle"
-        >
-          {isDark ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-primary" />}
-        </Button>
       </div>
 
       <div className="px-4 py-6">
@@ -360,6 +351,7 @@ export function MobileMenu() {
 export function Topbar() {
   const { searchQuery, setSearchQuery, problems } = useStudy();
   const activeProblems = problems.filter(p => p.status === "active");
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md transition-all">
@@ -378,13 +370,27 @@ export function Topbar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="relative h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all duration-300 hover:shadow-md hover:scale-105"
+          data-testid="button-theme-toggle"
+        >
+          {isDark ? (
+            <Sun className="h-4 w-4 text-amber-400 transition-transform duration-300 hover:rotate-45" />
+          ) : (
+            <Moon className="h-4 w-4 text-indigo-500 transition-transform duration-300 hover:-rotate-12" />
+          )}
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground" data-testid="button-notifications">
-              <Bell className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all duration-300 hover:shadow-md hover:scale-105" data-testid="button-notifications">
+              <Bell className="h-4 w-4" />
               {activeProblems.length > 0 && (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse"></span>
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse"></span>
               )}
             </Button>
           </DropdownMenuTrigger>
