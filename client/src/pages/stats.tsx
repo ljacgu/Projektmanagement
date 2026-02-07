@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { useStudy } from "@/lib/study-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip, TrendingUp, TrendingDown, Minus, FileText, Download } from "lucide-react";
+import { Clock, BookOpen, CheckCircle2, GraduationCap, Award, XCircle, Plus, Paperclip, TrendingUp, TrendingDown, Minus, FileText, Download, Upload, Eye } from "lucide-react";
 import { isBefore, parseISO, isToday, isThisWeek, isThisMonth, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,25 +12,113 @@ import type { Subject } from "@shared/schema";
 
 function ExamFiles({ subjectId }: { subjectId: number }) {
   const { data: files = [] } = useFilesBySubject(subjectId);
-  
-  if (files.length === 0) return null;
+  const { addFile } = useStudy();
+  const [uploading, setUploading] = useState(false);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploading(true);
+    for (const file of Array.from(e.target.files)) {
+      const base64Url = await fileToBase64(file);
+      addFile(subjectId, {
+        name: file.name,
+        type: file.type,
+        url: base64Url,
+        size: formatFileSize(file.size),
+        uploadedAt: new Date().toISOString(),
+      });
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
+  const handleView = (file: { url: string; name: string; type: string }) => {
+    const safeName = file.name.replace(/[<>"'&]/g, '_');
+    if (file.type.startsWith("image/")) {
+      const w = window.open("", "_blank");
+      if (w) {
+        w.document.title = safeName;
+        const img = w.document.createElement("img");
+        img.src = file.url;
+        img.style.cssText = "max-width:100%;max-height:100vh;object-fit:contain";
+        w.document.body.style.cssText = "margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#111";
+        w.document.body.appendChild(img);
+      }
+    } else if (file.type === "application/pdf") {
+      const w = window.open("", "_blank");
+      if (w) {
+        w.document.title = safeName;
+        const iframe = w.document.createElement("iframe");
+        iframe.src = file.url;
+        iframe.style.cssText = "width:100%;height:100vh;border:none";
+        w.document.body.style.margin = "0";
+        w.document.body.appendChild(iframe);
+      }
+    } else {
+      const a = document.createElement("a");
+      a.href = file.url;
+      a.download = file.name;
+      a.click();
+    }
+  };
   
   return (
     <div className="mt-2 space-y-1">
       {files.map((file) => (
-        <a
+        <div
           key={file.id}
-          href={file.url}
-          download={file.name}
-          className="flex items-center gap-2 text-xs text-primary hover:underline bg-primary/5 p-2 rounded border border-primary/10"
+          className="flex items-center gap-2 text-xs bg-primary/5 p-2 rounded border border-primary/10"
           data-testid={`file-${file.id}`}
         >
-          <FileText className="h-3 w-3" />
-          <span className="truncate flex-1">{file.name}</span>
+          <FileText className="h-3 w-3 text-primary" />
+          <span className="truncate flex-1 font-medium">{file.name}</span>
           <span className="text-muted-foreground">{file.size}</span>
-          <Download className="h-3 w-3" />
-        </a>
+          <button
+            onClick={() => handleView(file)}
+            className="text-primary hover:text-primary/80 p-1 rounded hover:bg-primary/10"
+            title="View file"
+            data-testid={`button-view-file-${file.id}`}
+          >
+            <Eye className="h-3 w-3" />
+          </button>
+          <a
+            href={file.url}
+            download={file.name}
+            className="text-primary hover:text-primary/80 p-1 rounded hover:bg-primary/10"
+            title="Download file"
+            data-testid={`button-download-file-${file.id}`}
+          >
+            <Download className="h-3 w-3" />
+          </a>
+        </div>
       ))}
+      <label className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary cursor-pointer p-2 rounded border border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors" data-testid={`button-attach-file-${subjectId}`}>
+        <Upload className="h-3 w-3" />
+        <span>{uploading ? "Uploading..." : "Attach exam file"}</span>
+        <input
+          type="file"
+          className="hidden"
+          multiple
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+          onChange={handleUpload}
+          data-testid={`input-upload-file-${subjectId}`}
+        />
+      </label>
     </div>
   );
 }
@@ -279,105 +367,6 @@ export default function StatsPage() {
             </div>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Session History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[350px] pr-4">
-                  <div className="space-y-6">
-                    {logs.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        No study logs yet. Start studying to see your history!
-                      </div>
-                    ) : (
-                      logs.map((log) => {
-                        const subject = subjects.find((s) => s.id === log.subjectId);
-                        const solvedProblem = log.solvedProblemId 
-                          ? problems.find(p => p.id === log.solvedProblemId) 
-                          : null;
-
-                        return (
-                          <div key={log.id} className="relative pl-6 pb-6 border-l-2 border-muted last:pb-0" data-testid={`log-entry-${log.id}`}>
-                            <div className="absolute top-0 left-[-9px] h-4 w-4 rounded-full bg-primary ring-4 ring-background" />
-                            
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-2">
-                              <div>
-                                <h3 className="font-semibold text-lg">{subject?.name}</h3>
-                                <span className="text-sm text-muted-foreground">{log.date}</span>
-                              </div>
-                              <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm font-mono">
-                                <Clock className="h-3.5 w-3.5" />
-                                {log.durationMinutes} min
-                              </div>
-                            </div>
-                            
-                            <div className="bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                              <p className="text-foreground/90">{log.description}</p>
-                              
-                              {solvedProblem && (
-                                <div className="mt-3 flex items-start gap-2 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 p-2 rounded text-sm">
-                                  <CheckCircle2 className="h-4 w-4 mt-0.5" />
-                                  <div>
-                                    <span className="font-semibold block">Problem Solved!</span>
-                                    <span className="opacity-90">{solvedProblem.description}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Study Time by Subject</CardTitle>
-                <CardDescription>Hours spent on each subject</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {subjects.filter(s => !s.grade).length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      No active subjects. Add subjects to track study time.
-                    </div>
-                  ) : (
-                    subjects.filter(s => !s.grade).map((subject) => {
-                      const subjectLogs = logs.filter(l => l.subjectId === subject.id);
-                      const totalMinutes = subjectLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
-                      const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
-                      const targetHours = subject.targetHours || 20;
-                      const progress = Math.min(100, (totalHours / targetHours) * 100);
-                      
-                      return (
-                        <div key={subject.id} className="space-y-2" data-testid={`subject-time-${subject.id}`}>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-3 h-3 rounded-full ${subject.color}`} />
-                              <span className="font-medium">{subject.name}</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">
-                              {totalHours}h / {targetHours}h target
-                            </span>
-                          </div>
-                          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full transition-all ${subject.color}`}
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
               <CardHeader>
                 <CardTitle id="learning-time-evaluation">Learning Time Evaluation</CardTitle>
                 <CardDescription>Assessment of your study habits</CardDescription>
@@ -470,6 +459,50 @@ export default function StatsPage() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Study Time by Subject</CardTitle>
+                <CardDescription>Hours spent on each subject</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {subjects.filter(s => !s.grade).length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No active subjects. Add subjects to track study time.
+                    </div>
+                  ) : (
+                    subjects.filter(s => !s.grade).map((subject) => {
+                      const subjectLogs = logs.filter(l => l.subjectId === subject.id);
+                      const totalMinutes = subjectLogs.reduce((acc, l) => acc + l.durationMinutes, 0);
+                      const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
+                      const targetHours = subject.targetHours || 20;
+                      const progress = Math.min(100, (totalHours / targetHours) * 100);
+                      
+                      return (
+                        <div key={subject.id} className="space-y-2" data-testid={`subject-time-${subject.id}`}>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${subject.color}`} />
+                              <span className="font-medium">{subject.name}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {totalHours}h / {targetHours}h target
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all ${subject.color}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card id="problems-overview">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -533,6 +566,61 @@ export default function StatsPage() {
                     })
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Session History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[350px] pr-4">
+                  <div className="space-y-6">
+                    {logs.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        No study logs yet. Start studying to see your history!
+                      </div>
+                    ) : (
+                      logs.map((log) => {
+                        const subject = subjects.find((s) => s.id === log.subjectId);
+                        const solvedProblem = log.solvedProblemId 
+                          ? problems.find(p => p.id === log.solvedProblemId) 
+                          : null;
+
+                        return (
+                          <div key={log.id} className="relative pl-6 pb-6 border-l-2 border-muted last:pb-0" data-testid={`log-entry-${log.id}`}>
+                            <div className="absolute top-0 left-[-9px] h-4 w-4 rounded-full bg-primary ring-4 ring-background" />
+                            
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-2">
+                              <div>
+                                <h3 className="font-semibold text-lg">{subject?.name}</h3>
+                                <span className="text-sm text-muted-foreground">{log.date}</span>
+                              </div>
+                              <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1 rounded-full text-sm font-mono">
+                                <Clock className="h-3.5 w-3.5" />
+                                {log.durationMinutes} min
+                              </div>
+                            </div>
+                            
+                            <div className="bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                              <p className="text-foreground/90">{log.description}</p>
+                              
+                              {solvedProblem && (
+                                <div className="mt-3 flex items-start gap-2 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 p-2 rounded text-sm">
+                                  <CheckCircle2 className="h-4 w-4 mt-0.5" />
+                                  <div>
+                                    <span className="font-semibold block">Problem Solved!</span>
+                                    <span className="opacity-90">{solvedProblem.description}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>
