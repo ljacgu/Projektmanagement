@@ -95,29 +95,31 @@ export default function CalendarPage() {
 
   const renderMonthView = () => {
     const days = getMonthDays();
-    const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const weekDaysFull = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const weekDaysShort = ["M", "T", "W", "T", "F", "S", "S"];
     
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="rounded-full">
-            <ChevronLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="rounded-full h-9 w-9" data-testid="button-prev-month">
+            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
-          <h2 className="text-2xl font-bold font-serif">{format(currentMonth, "MMMM yyyy")}</h2>
-          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="rounded-full">
-            <ChevronRight className="h-5 w-5" />
+          <h2 className="text-lg md:text-2xl font-bold font-serif" data-testid="text-current-month">{format(currentMonth, "MMMM yyyy")}</h2>
+          <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="rounded-full h-9 w-9" data-testid="button-next-month">
+            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekDays.map(day => (
-            <div key={day} className="text-center text-sm font-bold text-muted-foreground uppercase tracking-wider py-2 bg-secondary/30 rounded-lg">
-              {day}
+        <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-1 md:mb-2">
+          {weekDaysFull.map((day, i) => (
+            <div key={day} className="text-center text-[10px] md:text-sm font-bold text-muted-foreground uppercase tracking-wider py-1.5 md:py-2 bg-secondary/30 rounded-md md:rounded-lg">
+              <span className="hidden md:inline">{day}</span>
+              <span className="md:hidden">{weekDaysShort[i]}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1 flex-1">
+        <div className="grid grid-cols-7 gap-0.5 md:gap-1 flex-1">
           {days.map((day) => {
             const exams = getExamsForDate(day);
             const events = getEventsForDate(day);
@@ -134,7 +136,7 @@ export default function CalendarPage() {
                   <button
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                      "min-h-[80px] md:min-h-[100px] w-full text-left p-1.5 rounded-xl transition-all flex flex-col",
+                      "min-h-[56px] md:min-h-[100px] w-full text-left p-0.5 md:p-1.5 rounded-lg md:rounded-xl transition-all flex flex-col items-center",
                       isSelected ? "bg-primary/10 ring-2 ring-primary/40" : "hover:bg-secondary/60",
                       isToday ? "bg-gradient-to-br from-primary/20 to-primary/5" : "",
                       !isCurrentMonth && "opacity-30",
@@ -142,10 +144,10 @@ export default function CalendarPage() {
                     )}
                     data-testid={`calendar-day-${format(day, 'yyyy-MM-dd')}`}
                   >
-                    <div className="flex items-center justify-center mb-1">
+                    <div className="flex items-center justify-center mb-0.5 md:mb-1">
                       <span className={cn(
-                        "text-lg md:text-xl font-bold h-8 w-8 md:h-10 md:w-10 flex items-center justify-center rounded-full transition-all font-serif",
-                        isToday ? "bg-primary text-primary-foreground shadow-lg scale-110" : "",
+                        "text-sm md:text-xl font-bold h-6 w-6 md:h-10 md:w-10 flex items-center justify-center rounded-full transition-all font-serif",
+                        isToday ? "bg-primary text-primary-foreground shadow-lg md:scale-110" : "",
                         hasExam && !isToday ? "bg-red-500 text-white shadow-md" : "",
                         !isToday && !hasExam && "hover:bg-secondary"
                       )}>
@@ -154,15 +156,21 @@ export default function CalendarPage() {
                     </div>
                     
                     {hasExam && (
-                      <div className="flex items-center justify-center gap-1 w-full px-1 bg-red-500 text-white rounded-md py-0.5 shadow-sm mb-1">
+                      <div className="hidden md:flex items-center justify-center gap-1 w-full px-1 bg-red-500 text-white rounded-md py-0.5 shadow-sm mb-1">
                         <AlertTriangle className="h-3 w-3" />
                         <span className="text-[10px] font-bold truncate">EXAM</span>
+                      </div>
+                    )}
+
+                    {hasExam && (
+                      <div className="flex md:hidden items-center justify-center w-full">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
                       </div>
                     )}
                     
                     {!hasExam && dayInfo.level > 0 && (
                       <div className={cn(
-                        "flex items-center justify-center gap-1 w-full px-1 rounded-md py-0.5 text-white shadow-sm mb-1",
+                        "hidden md:flex items-center justify-center gap-1 w-full px-1 rounded-md py-0.5 text-white shadow-sm mb-1",
                         dayInfo.bgClass
                       )}>
                         <span className="text-[10px] font-semibold">
@@ -170,8 +178,14 @@ export default function CalendarPage() {
                         </span>
                       </div>
                     )}
+
+                    {!hasExam && dayInfo.level > 0 && (
+                      <div className="flex md:hidden items-center justify-center w-full">
+                        <div className={cn("h-1.5 w-1.5 rounded-full", dayInfo.bgClass)} />
+                      </div>
+                    )}
                     
-                    <div className="flex flex-wrap justify-center gap-0.5 w-full px-1 mt-auto">
+                    <div className="hidden md:flex flex-wrap justify-center gap-0.5 w-full px-1 mt-auto">
                       {events.slice(0, 3).map((e: any) => (
                         <div 
                           key={e.id} 
@@ -186,23 +200,23 @@ export default function CalendarPage() {
                   </button>
                 </PopoverTrigger>
                 {(hasExam || hasEvent) && (
-                  <PopoverContent className="w-80 p-4 shadow-xl border-2" align="center">
+                  <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-3 md:p-4 shadow-xl border-2" align="center">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between border-b pb-2">
-                        <h4 className="font-bold text-lg font-serif">{format(day, "MMMM d, yyyy")}</h4>
+                        <h4 className="font-bold text-base md:text-lg font-serif">{format(day, "MMMM d, yyyy")}</h4>
                         {dayInfo.level > 0 && (
-                          <Badge className={cn(dayInfo.bgClass, "text-white border-0")}>
+                          <Badge className={cn(dayInfo.bgClass, "text-white border-0 text-xs")}>
                             {dayInfo.label}
                           </Badge>
                         )}
                       </div>
                       {exams.map(exam => (
-                        <div key={exam.id} className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg" data-testid={`exam-popup-${exam.id}`}>
+                        <div key={exam.id} className="bg-gradient-to-r from-red-500 to-red-600 text-white p-3 md:p-4 rounded-xl shadow-lg" data-testid={`exam-popup-${exam.id}`}>
                           <div className="flex items-center gap-2 mb-2">
-                            <AlertTriangle className="h-5 w-5" />
+                            <AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />
                             <span className="font-bold uppercase tracking-wide text-xs bg-white/20 px-2 py-0.5 rounded">Exam Day</span>
                           </div>
-                          <div className="font-bold text-xl">{exam.name}</div>
+                          <div className="font-bold text-lg md:text-xl">{exam.name}</div>
                           <div className="text-sm opacity-90 mt-2 flex items-center gap-2">
                             <BookOpen className="h-4 w-4" />
                             Preparedness: {exam.studyScore}%
@@ -210,8 +224,8 @@ export default function CalendarPage() {
                         </div>
                       ))}
                       {events.map((event: any) => (
-                        <div key={event.id} className={cn("text-white p-4 rounded-xl shadow-md relative group", event.color)} data-testid={`event-popup-${event.id}`}>
-                          <div className="font-semibold text-lg">{event.title}</div>
+                        <div key={event.id} className={cn("text-white p-3 md:p-4 rounded-xl shadow-md relative group", event.color)} data-testid={`event-popup-${event.id}`}>
+                          <div className="font-semibold text-base md:text-lg">{event.title}</div>
                           {event.description && <div className="text-sm opacity-90 mt-1">{event.description}</div>}
                           <div className="text-xs opacity-75 capitalize mt-2 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -246,41 +260,42 @@ export default function CalendarPage() {
       <div 
         key={day.toISOString()} 
         className={cn(
-          "flex gap-4 p-4 rounded-xl border-2 transition-all",
+          "flex gap-3 md:gap-4 p-3 md:p-4 rounded-xl border-2 transition-all",
           isToday ? "bg-primary/5 border-primary/30 shadow-md" : "bg-card border-border/50",
           dayInfo.level >= 3 && "border-l-4",
           dayInfo.level === 4 && "border-l-red-500",
           dayInfo.level === 3 && "border-l-orange-500"
         )}
       >
-        <div className="flex flex-col items-center justify-center min-w-[70px] border-r pr-4">
+        <div className="flex flex-col items-center justify-center min-w-[55px] md:min-w-[70px] border-r pr-3 md:pr-4">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{format(day, "EEE")}</span>
           <span className={cn(
-            "text-3xl font-bold font-serif",
+            "text-2xl md:text-3xl font-bold font-serif",
             isToday ? "text-primary" : "text-foreground"
           )}>{format(day, "d")}</span>
           {dayInfo.level > 0 && (
-            <div className={cn("h-2 w-8 rounded-full mt-2", dayInfo.bgClass)} />
+            <div className={cn("h-2 w-6 md:w-8 rounded-full mt-2", dayInfo.bgClass)} />
           )}
         </div>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 min-w-0">
           {allEvents.length > 0 ? (
             allEvents.map((item: any) => (
               <div 
                 key={item.id} 
                 className={cn(
-                  "p-3 rounded-lg text-sm font-medium flex justify-between items-center shadow-sm text-white", 
+                  "p-2.5 md:p-3 rounded-lg text-sm font-medium flex justify-between items-center shadow-sm text-white", 
                   item.isExam ? "bg-red-500" : item.color
                 )}
+                data-testid={`agenda-item-${item.id}`}
               >
-                <div className="flex items-center gap-2">
-                  {item.isExam && <AlertTriangle className="h-4 w-4" />}
-                  {item.isExam && <Badge variant="outline" className="bg-white/20 border-white/40 text-white text-xs">EXAM</Badge>}
-                  <span>{item.name || item.title}</span>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {item.isExam && <AlertTriangle className="h-4 w-4 shrink-0" />}
+                  {item.isExam && <Badge variant="outline" className="bg-white/20 border-white/40 text-white text-xs shrink-0">EXAM</Badge>}
+                  <span className="truncate">{item.name || item.title}</span>
                 </div>
-                {item.isExam && <span className="text-xs bg-white/20 px-2 py-0.5 rounded">Score: {item.studyScore}%</span>}
+                {item.isExam && <span className="text-xs bg-white/20 px-2 py-0.5 rounded shrink-0 ml-2">{item.studyScore}%</span>}
                 {!item.isExam && (
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:bg-white/20" onClick={() => deletePersonalEvent(item.id)}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:bg-white/20 shrink-0" onClick={() => deletePersonalEvent(item.id)} data-testid={`button-delete-agenda-${item.id}`}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
@@ -317,39 +332,40 @@ export default function CalendarPage() {
             key={day.toISOString()}
             onClick={() => setSelectedDate(day)}
             className={cn(
-              "p-3 rounded-xl border-2 cursor-pointer transition-all min-h-[140px]",
-              isSelected ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : "",
+              "p-2 md:p-3 rounded-lg md:rounded-xl border-2 cursor-pointer transition-all min-h-[80px] md:min-h-[140px]",
+              isSelected ? "ring-2 ring-primary ring-offset-1 md:ring-offset-2 bg-primary/5" : "",
               isTodayDate ? "bg-primary/10 border-primary shadow-lg" : "bg-card hover:bg-secondary/50 border-border",
               dayInfo.level === 4 && "border-red-500",
               dayInfo.level === 3 && "border-orange-500"
             )}
           >
-            <div className="text-center mb-3">
-              <div className="text-sm font-medium text-muted-foreground">{format(day, "EEE")}</div>
+            <div className="text-center mb-1 md:mb-3">
+              <div className="text-[10px] md:text-sm font-medium text-muted-foreground">{format(day, "EEE")}</div>
               <div className={cn(
-                "text-2xl font-bold mt-1",
+                "text-lg md:text-2xl font-bold mt-0.5 md:mt-1",
                 isTodayDate && "text-primary",
                 isSelected && !isTodayDate && "text-primary"
               )}>{format(day, "d")}</div>
-              <div className="text-xs text-muted-foreground">{format(day, "MMM")}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">{format(day, "MMM")}</div>
             </div>
             {dayInfo.level > 0 && (
-              <div className={cn("h-2 w-full rounded-full mb-2", dayInfo.bgClass)} />
+              <div className={cn("h-1.5 md:h-2 w-full rounded-full mb-1 md:mb-2", dayInfo.bgClass)} />
             )}
-            <div className="space-y-1.5">
-              {allEvents.slice(0, 3).map((item: any) => (
+            <div className="space-y-1 md:space-y-1.5">
+              {allEvents.slice(0, 2).map((item: any) => (
                 <div 
                   key={item.id}
                   className={cn(
-                    "text-xs px-2 py-1 rounded text-white truncate font-medium",
+                    "text-[9px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded text-white truncate font-medium",
                     item.isExam ? "bg-red-500" : item.color
                   )}
                 >
-                  {item.name || item.title}
+                  <span className="hidden sm:inline">{item.name || item.title || ''}</span>
+                  <span className="sm:hidden">{(item.name || item.title || '').substring(0, 4)}</span>
                 </div>
               ))}
-              {allEvents.length > 3 && (
-                <div className="text-xs text-muted-foreground font-medium">+{allEvents.length - 3} more</div>
+              {allEvents.length > 2 && (
+                <div className="text-[9px] md:text-xs text-muted-foreground font-medium text-center">+{allEvents.length - 2}</div>
               )}
             </div>
           </div>
@@ -357,47 +373,49 @@ export default function CalendarPage() {
       };
       
       return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex items-center justify-between mb-2 md:mb-4 gap-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedDate(addDays(selectedDate, -14))}
-              className="gap-2"
+              className="gap-1 md:gap-2 text-xs px-2 md:px-3"
               data-testid="button-prev-2weeks"
             >
-              <ChevronLeft className="h-4 w-4" /> Previous 2 Weeks
+              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Previous</span>
             </Button>
-            <h2 className="text-lg font-bold font-serif">
-              {format(weekStart, "MMM d")} - {format(addDays(nextWeekStart, 6), "MMM d, yyyy")}
+            <h2 className="text-sm md:text-lg font-bold font-serif text-center">
+              {format(weekStart, "MMM d")} - {format(addDays(nextWeekStart, 6), "MMM d")}
             </h2>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedDate(addDays(selectedDate, 14))}
-              className="gap-2"
+              className="gap-1 md:gap-2 text-xs px-2 md:px-3"
               data-testid="button-next-2weeks"
             >
-              Next 2 Weeks <ChevronRight className="h-4 w-4" />
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
+            <h3 className="text-xs md:text-sm font-semibold text-muted-foreground mb-2 md:mb-3 uppercase tracking-wider flex items-center gap-2">
+              <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
               Week of {format(weekStart, "MMM d")}
             </h3>
-            <div className="grid grid-cols-7 gap-3">
+            <div className="grid grid-cols-7 gap-1 md:gap-3">
               {currentWeekDays.map(renderWeekDay)}
             </div>
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
+            <h3 className="text-xs md:text-sm font-semibold text-muted-foreground mb-2 md:mb-3 uppercase tracking-wider flex items-center gap-2">
+              <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
               Week of {format(nextWeekStart, "MMM d")}
             </h3>
-            <div className="grid grid-cols-7 gap-3">
+            <div className="grid grid-cols-7 gap-1 md:gap-3">
               {nextWeekDays.map(renderWeekDay)}
             </div>
           </div>
@@ -416,7 +434,7 @@ export default function CalendarPage() {
     const days = eachDayOfInterval({ start, end });
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {days.map((day) => renderDayCard(day))}
       </div>
     );
@@ -424,24 +442,24 @@ export default function CalendarPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-[1400px] mx-auto">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="space-y-4 md:space-y-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div>
-            <h1 className="text-3xl font-serif font-bold tracking-tight">Study Calendar</h1>
-            <p className="text-muted-foreground">Manage your exams and personal schedule.</p>
+            <h1 className="text-2xl md:text-3xl font-serif font-bold tracking-tight">Study Calendar</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Manage your exams and personal schedule.</p>
           </div>
-          <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+          <div className="flex flex-wrap gap-2 items-center">
              <AddEventDialog defaultDate={selectedDate}>
-               <Button className="gap-2 shadow-sm" data-testid="button-add-event">
+               <Button className="gap-2 shadow-sm" size="sm" data-testid="button-add-event">
                  <Plus className="h-4 w-4" /> Add Event
                </Button>
              </AddEventDialog>
-             <div className="flex bg-secondary p-1 rounded-lg ml-auto lg:ml-0">
+             <div className="flex bg-secondary p-0.5 md:p-1 rounded-lg ml-auto">
                <Button 
                  variant={view === "month" ? "default" : "ghost"} 
                  size="sm" 
                  onClick={() => setView("month")}
-                 className="text-xs"
+                 className="text-[11px] md:text-xs h-7 md:h-8 px-2 md:px-3"
                  data-testid="button-view-month"
                >
                  Month
@@ -450,16 +468,16 @@ export default function CalendarPage() {
                  variant={view === "2week" ? "default" : "ghost"} 
                  size="sm" 
                  onClick={() => setView("2week")}
-                 className="text-xs"
+                 className="text-[11px] md:text-xs h-7 md:h-8 px-2 md:px-3"
                  data-testid="button-view-2week"
                >
-                 2 Weeks
+                 2W
                </Button>
                <Button 
                  variant={view === "week" ? "default" : "ghost"} 
                  size="sm" 
                  onClick={() => setView("week")}
-                 className="text-xs"
+                 className="text-[11px] md:text-xs h-7 md:h-8 px-2 md:px-3"
                  data-testid="button-view-week"
                >
                  Week
@@ -468,7 +486,7 @@ export default function CalendarPage() {
                  variant={view === "day" ? "default" : "ghost"} 
                  size="sm" 
                  onClick={() => setView("day")}
-                 className="text-xs"
+                 className="text-[11px] md:text-xs h-7 md:h-8 px-2 md:px-3"
                  data-testid="button-view-day"
                >
                  Day
@@ -477,94 +495,92 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-6 p-4 bg-gradient-to-r from-secondary/50 to-secondary/20 rounded-xl border shadow-sm">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <CalendarIcon className="h-4 w-4 text-primary" />
+        <div className="flex flex-wrap gap-3 md:gap-6 p-3 md:p-4 bg-gradient-to-r from-secondary/50 to-secondary/20 rounded-xl border shadow-sm">
+          <div className="flex items-center gap-2 text-xs md:text-sm font-semibold">
+            <CalendarIcon className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
             <span>Legend:</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-4 w-4 rounded-full bg-red-500 shadow-sm" />
-            <span className="font-medium text-red-700 dark:text-red-400">Exam Day</span>
+          <div className="flex items-center gap-1.5 text-xs md:text-sm">
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-red-500 shadow-sm" />
+            <span className="font-medium text-red-700 dark:text-red-400">Exam</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-4 w-4 rounded-full bg-orange-500 shadow-sm" />
-            <span>Very Busy (3+)</span>
+          <div className="flex items-center gap-1.5 text-xs md:text-sm">
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-orange-500 shadow-sm" />
+            <span>Busy</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-4 w-4 rounded-full bg-amber-400 shadow-sm" />
-            <span>Busy (2)</span>
+          <div className="flex items-center gap-1.5 text-xs md:text-sm">
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-amber-400 shadow-sm" />
+            <span>Mod.</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-4 w-4 rounded-full bg-emerald-500 shadow-sm" />
-            <span>Light (1)</span>
+          <div className="flex items-center gap-1.5 text-xs md:text-sm">
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-emerald-500 shadow-sm" />
+            <span>Light</span>
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-12 h-full">
-           <div className="col-span-12 md:col-span-8 lg:col-span-8 flex flex-col h-full min-h-[650px]">
+        <div className="grid gap-4 md:gap-8 md:grid-cols-12 h-full">
+           <div className="col-span-12 md:col-span-8 lg:col-span-8 flex flex-col h-full min-h-[400px] md:min-h-[650px]">
               <Card className="flex-1 flex flex-col shadow-lg border-2">
-                <CardContent className="p-6 md:p-8 flex-1">
+                <CardContent className="p-3 md:p-6 lg:p-8 flex-1">
                    {view === "month" ? renderMonthView() : renderAgendaView()}
                 </CardContent>
               </Card>
            </div>
            
-           <div className="col-span-12 md:col-span-4 lg:col-span-4 space-y-6">
+           <div className="col-span-12 md:col-span-4 lg:col-span-4 space-y-4 md:space-y-6">
               <Card className="border-l-4 border-l-primary shadow-lg">
-                 <CardHeader>
-                    <CardTitle className="font-serif text-xl">
+                 <CardHeader className="p-4 md:p-6">
+                    <CardTitle className="font-serif text-lg md:text-xl">
                        {format(selectedDate, "MMMM d, yyyy")}
                     </CardTitle>
                     <CardDescription>
                        Daily Overview
                     </CardDescription>
                  </CardHeader>
-                 <CardContent>
-                    <div className="space-y-4">
+                 <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                    <div className="space-y-3 md:space-y-4">
                        {getAllForDate(selectedDate).length > 0 ? (
                           getAllForDate(selectedDate).map((item: any) => (
                              <div key={item.id} className={cn(
-                               "p-4 rounded-xl shadow-md text-white relative group transition-all hover:scale-[1.02] hover:shadow-lg", 
+                               "p-3 md:p-4 rounded-xl shadow-md text-white relative group transition-all hover:scale-[1.02] hover:shadow-lg", 
                                item.isExam ? "bg-gradient-to-r from-red-500 to-red-600" : item.color
                              )} data-testid={`daily-item-${item.id}`}>
                                 {item.isExam ? (
                                   <>
                                     <div className="flex items-center gap-2 mb-2">
-                                      <AlertTriangle className="h-5 w-5" />
-                                      <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded">Exam Day</span>
+                                      <AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />
+                                      <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-xs">EXAM</Badge>
                                     </div>
-                                    <h3 className="font-bold text-xl">{item.name}</h3>
-                                    <p className="text-sm opacity-90 mt-2 flex items-center gap-2">
-                                      <BookOpen className="h-4 w-4" />
-                                      Preparedness: {item.studyScore}%
-                                    </p>
+                                    <div className="font-bold text-base md:text-lg">{item.name}</div>
+                                    <div className="text-xs md:text-sm opacity-90 mt-2 flex items-center gap-2">
+                                      <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
+                                      Prep: {item.studyScore}%
+                                    </div>
                                   </>
                                 ) : (
                                   <>
-                                    <div className="flex justify-between items-start">
-                                      <span className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1 block bg-white/20 px-2 py-0.5 rounded">{item.type}</span>
-                                      <button onClick={() => deletePersonalEvent(item.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-200 transition-opacity p-1 rounded-full hover:bg-white/20">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
+                                    <div className="font-semibold text-base md:text-lg pr-8">{item.title}</div>
+                                    {item.description && <div className="text-xs md:text-sm opacity-90 mt-1">{item.description}</div>}
+                                    <div className="text-xs opacity-75 capitalize mt-2 flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {item.type}
                                     </div>
-                                    <h3 className="font-bold text-lg mt-2">{item.title}</h3>
-                                    <p className="text-sm opacity-90 mt-1">{item.description}</p>
+                                    <button 
+                                      onClick={() => deletePersonalEvent(item.id)}
+                                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:text-red-200 transition-all p-1 rounded-full hover:bg-white/20"
+                                      data-testid={`button-delete-daily-${item.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
                                   </>
                                 )}
                              </div>
                           ))
                        ) : (
-                          <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl bg-secondary/20">
-                             <Sparkles className="h-8 w-8 mx-auto mb-3 text-emerald-400" />
-                             <p className="font-medium">Free day!</p>
-                             <p className="text-sm mt-1">Nothing scheduled</p>
-                             <div className="mt-4">
-                               <AddEventDialog defaultDate={selectedDate}>
-                                 <Button variant="outline" size="sm" data-testid="button-add-event-empty">
-                                   <Plus className="mr-2 h-3 w-3" /> Add Event
-                                 </Button>
-                               </AddEventDialog>
-                             </div>
+                          <div className="flex flex-col items-center justify-center py-6 md:py-10 text-muted-foreground">
+                             <Sparkles className="h-8 w-8 md:h-10 md:w-10 text-emerald-400 mb-3" />
+                             <p className="font-medium text-sm">Free Day</p>
+                             <p className="text-xs mt-1">Tap a date with events to see details</p>
                           </div>
                        )}
                     </div>
@@ -572,44 +588,34 @@ export default function CalendarPage() {
               </Card>
 
               <Card className="shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-red-500/10 to-red-500/5 rounded-t-lg">
-                  <CardTitle className="font-serif flex items-center gap-2 text-lg">
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                <CardHeader className="p-4 md:p-6 pb-2 md:pb-2">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg font-serif">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
                     Upcoming Exams
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="space-y-3">
-                    {upcomingExams.map((subject) => (
-                      <div 
-                        key={subject.id} 
-                        className="p-4 bg-card border-2 rounded-xl shadow-sm transition-all hover:translate-x-1 hover:shadow-md cursor-pointer border-l-4 border-l-red-500"
-                        onClick={() => {
-                          const examDate = parseISO(subject.examDate);
-                          setSelectedDate(examDate);
-                          setCurrentMonth(examDate);
-                        }}
-                        data-testid={`upcoming-exam-${subject.id}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-bold">{subject.name}</h4>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                              <CalendarIcon className="h-3 w-3" />
-                              {format(parseISO(subject.examDate), "MMM d, yyyy")}
-                            </p>
+                <CardContent className="p-4 md:p-6 pt-2 md:pt-2">
+                  <div className="space-y-2 md:space-y-3">
+                    {upcomingExams.length > 0 ? (
+                      upcomingExams.slice(0, 5).map(exam => {
+                        const daysLeft = Math.ceil((parseISO(exam.examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        return (
+                          <div key={exam.id} className="flex items-center justify-between p-2.5 md:p-3 rounded-lg bg-secondary/50 border" data-testid={`upcoming-exam-${exam.id}`}>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-xs md:text-sm truncate">{exam.name}</div>
+                              <div className="text-[10px] md:text-xs text-muted-foreground">{format(parseISO(exam.examDate), "MMM d")}</div>
+                            </div>
+                            <Badge 
+                              variant={daysLeft <= 3 ? "destructive" : "secondary"} 
+                              className="text-[10px] md:text-xs shrink-0 ml-2"
+                            >
+                              {daysLeft === 0 ? "Today" : `${daysLeft}d`}
+                            </Badge>
                           </div>
-                          <Badge variant="destructive" className="font-bold">
-                            {subject.studyScore}%
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                    {upcomingExams.length === 0 && (
-                      <div className="text-center py-6 text-muted-foreground">
-                        <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">No upcoming exams</p>
-                      </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-xs md:text-sm text-muted-foreground text-center py-4">No upcoming exams</p>
                     )}
                   </div>
                 </CardContent>
