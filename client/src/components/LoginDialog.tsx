@@ -30,15 +30,19 @@ export function LoginDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="button-profile">
-           {user ? (
-             <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-secondary-foreground ring-2 ring-background border border-border">
-                {user.name.charAt(0).toUpperCase()}
-             </div>
-           ) : (
-             <UserCircle className="h-6 w-6 text-muted-foreground" />
-           )}
-        </Button>
+        {user ? (
+          <Button variant="ghost" className="relative flex items-center gap-2 rounded-full px-3 h-9 hover:bg-secondary" data-testid="button-profile">
+            <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary ring-2 ring-primary/20">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-sm font-medium hidden sm:inline">{user.name}</span>
+          </Button>
+        ) : (
+          <Button variant="default" className="rounded-full px-4 h-9 shadow-sm font-medium" data-testid="button-profile">
+            <UserCircle className="h-4 w-4 mr-2" />
+            Log In
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
