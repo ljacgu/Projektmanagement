@@ -352,22 +352,26 @@ export function Topbar() {
   const { searchQuery, setSearchQuery, problems } = useStudy();
   const activeProblems = problems.filter(p => p.status === "active");
   const { isDark, toggleTheme } = useTheme();
+  const [location] = useLocation();
+  const hideSearch = location === "/stats" || location === "/calendar";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md transition-all">
       <div className="flex flex-1 items-center gap-4">
         <MobileMenu />
-        <div className="relative w-full max-w-md hidden md:block group">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <Input
-            type="search"
-            placeholder="Search subjects or problems..."
-            className="w-full bg-secondary/50 pl-9 border-transparent focus-visible:ring-primary/20 transition-all hover:bg-secondary/80 focus:bg-background focus:border-primary/30"
-            data-testid="input-global-search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        {!hideSearch && (
+          <div className="relative w-full max-w-md hidden md:block group">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <Input
+              type="search"
+              placeholder="Search subjects or problems..."
+              className="w-full bg-secondary/50 pl-9 border-transparent focus-visible:ring-primary/20 transition-all hover:bg-secondary/80 focus:bg-background focus:border-primary/30"
+              data-testid="input-global-search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
